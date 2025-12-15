@@ -1,0 +1,463 @@
+@import "tailwindcss";
+
+/* Define theme variables first */
+@theme inline {
+  /* Color definitions with CSS custom properties */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Custom color scales */
+  --color-emerald-50: hsl(var(--emerald-50));
+  --color-emerald-100: hsl(var(--emerald-100));
+  --color-emerald-500: hsl(var(--emerald-500));
+  --color-emerald-600: hsl(var(--emerald-600));
+  --color-emerald-700: hsl(var(--emerald-700));
+  --color-emerald-900: hsl(var(--emerald-900));
+
+  --color-amber-50: hsl(var(--amber-50));
+  --color-amber-400: hsl(var(--amber-400));
+  --color-amber-500: hsl(var(--amber-500));
+  --color-amber-600: hsl(var(--amber-600));
+
+  --color-slate-50: hsl(var(--slate-50));
+  --color-slate-100: hsl(var(--slate-100));
+  --color-slate-200: hsl(var(--slate-200));
+  --color-slate-300: hsl(var(--slate-300));
+  --color-slate-400: hsl(var(--slate-400));
+  --color-slate-500: hsl(var(--slate-500));
+  --color-slate-600: hsl(var(--slate-600));
+  --color-slate-700: hsl(var(--slate-700));
+  --color-slate-800: hsl(var(--slate-800));
+  --color-slate-900: hsl(var(--slate-900));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Border radius */
+  --radius: 0.75rem;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Box shadows */
+  --shadow-sm: 0 1px 2px 0 hsl(160 30% 15% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(160 30% 15% / 0.08),
+    0 2px 4px -2px hsl(160 30% 15% / 0.05);
+  --shadow-lg: 0 10px 15px -3px hsl(160 30% 15% / 0.08),
+    0 4px 6px -4px hsl(160 30% 15% / 0.05);
+  --shadow-xl: 0 20px 25px -5px hsl(160 30% 15% / 0.1),
+    0 8px 10px -6px hsl(160 30% 15% / 0.08);
+  --shadow-glow: 0 0 40px hsl(160 60% 30% / 0.15);
+
+  /* Font families */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Inter", system-ui, sans-serif;
+
+  /* Animation keyframes */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-slide-up: slideUp 0.5s ease-out forwards;
+  --animate-fade-in: fadeIn 0.3s ease-out forwards;
+  --animate-pulse-soft: pulseSoft 2s ease-in-out infinite;
+  --animate-notification: notification 0.5s ease-out forwards;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in-right: slide-in-right 0.4s ease-out;
+  --animate-slide-out-right: slide-out-right 0.4s ease-out;
+  --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* Define CSS custom properties */
+@layer base {
+  :root {
+    /* CSS Custom Properties */
+    --background: 40 20% 98%;
+    --foreground: 160 30% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 15%;
+    --primary: 160 60% 30%;
+    --primary-foreground: 40 20% 98%;
+    --secondary: 40 30% 94%;
+    --secondary-foreground: 160 30% 20%;
+    --muted: 40 20% 94%;
+    --muted-foreground: 160 15% 45%;
+    --accent: 35 90% 55%;
+    --accent-foreground: 40 20% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 20% 88%;
+    --input: 160 20% 88%;
+    --ring: 160 60% 30%;
+
+    /* Custom tokens */
+    --emerald-50: 152 80% 96%;
+    --emerald-100: 149 80% 90%;
+    --emerald-500: 160 60% 40%;
+    --emerald-600: 160 60% 30%;
+    --emerald-700: 160 65% 22%;
+    --emerald-900: 162 70% 12%;
+
+    --amber-50: 48 100% 96%;
+    --amber-400: 38 92% 60%;
+    --amber-500: 35 90% 55%;
+    --amber-600: 32 95% 44%;
+
+    --slate-50: 210 40% 98%;
+    --slate-100: 210 40% 96%;
+    --slate-200: 214 32% 91%;
+    --slate-300: 213 27% 84%;
+    --slate-400: 215 20% 65%;
+    --slate-500: 215 16% 47%;
+    --slate-600: 215 19% 35%;
+    --slate-700: 215 25% 27%;
+    --slate-800: 217 33% 17%;
+    --slate-900: 222 47% 11%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 162 70% 6%;
+    --foreground: 40 20% 95%;
+    --card: 162 50% 10%;
+    --card-foreground: 40 20% 95%;
+    --popover: 162 50% 10%;
+    --popover-foreground: 40 20% 95%;
+    --primary: 160 50% 50%;
+    --primary-foreground: 162 70% 6%;
+    --secondary: 160 30% 15%;
+    --secondary-foreground: 40 20% 90%;
+    --muted: 160 25% 18%;
+    --muted-foreground: 160 15% 60%;
+    --accent: 35 85% 55%;
+    --accent-foreground: 162 70% 6%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 30% 20%;
+    --input: 160 30% 20%;
+    --ring: 160 50% 50%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+/* Define keyframes */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseSoft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes notification {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Custom utility classes */
+@utility text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(
+    135deg,
+    hsl(160 60% 30%) 0%,
+    hsl(162 70% 20%) 50%,
+    hsl(165 75% 15%) 100%
+  );
+}
+
+@utility bg-gradient-hero {
+  background-image: linear-gradient(
+    135deg,
+    hsl(160 60% 30%) 0%,
+    hsl(162 70% 20%) 50%,
+    hsl(165 75% 15%) 100%
+  );
+}
+
+@utility bg-gradient-accent {
+  background-image: linear-gradient(
+    135deg,
+    hsl(35 90% 55%) 0%,
+    hsl(32 95% 50%) 100%
+  );
+}
+
+@utility bg-gradient-card {
+  background-image: linear-gradient(
+    180deg,
+    hsl(0 0% 100%) 0%,
+    hsl(40 20% 98%) 100%
+  );
+}
+
+@utility bg-gradient-mountain {
+  background-image: linear-gradient(
+    180deg,
+    hsl(200 30% 70% / 0.3) 0%,
+    hsl(160 40% 85% / 0.1) 100%
+  );
+}
+
+@utility shadow-glow {
+  box-shadow: 0 0 40px hsl(160 60% 30% / 0.15);
+}
+
+/* Animation delay utilities */
+@utility animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+@utility animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+@utility animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+@utility animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+@utility animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+@utility animation-delay-1000 {
+  animation-delay: 1000ms;
+}
+
+@utility animation-delay-1500 {
+  animation-delay: 1500ms;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Add to your globals.css or app.css */
+@layer utilities {
+  /* Better tap targets for mobile */
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+
+  /* Improve mobile readability */
+  @media (max-width: 640px) {
+    .text-balance {
+      text-wrap: balance;
+    }
+  }
+
+  /* Better backdrop blur support */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Smooth transitions */
+  .transition-transform {
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}
+
+/* Mobile-first responsive design */
+.container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
