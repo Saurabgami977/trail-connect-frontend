@@ -124,8 +124,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Admin Header */}
@@ -632,8 +630,6 @@ const AdminDashboard = () => {
           </Tabs>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

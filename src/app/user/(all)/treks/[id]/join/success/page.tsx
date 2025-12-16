@@ -139,7 +139,7 @@ export default function JoinSuccessPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-emerald-50/20 to-background dark:from-background dark:via-emerald-950/10 dark:to-background mt-20">
+    <div className="min-h-screen bg-gradient-to-b from-background via-emerald-50/20 to-background ">
       {/* Confetti Animation Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {[...Array(50)].map((_, i) => (
@@ -182,7 +182,7 @@ export default function JoinSuccessPage() {
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
               Your spot on{" "}
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">
+              <span className="font-bold text-emerald-700 ">
                 {bookingData.trekName}
               </span>{" "}
               is officially reserved!
@@ -203,7 +203,7 @@ export default function JoinSuccessPage() {
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-full">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50  rounded-full">
               <Clock className="h-4 w-4 text-amber-600" />
               <span className="text-sm font-medium">
                 Redirecting to trek page in {countdown} seconds...
@@ -215,7 +215,7 @@ export default function JoinSuccessPage() {
             {/* Left Column - Booking Details */}
             <div className="lg:col-span-2 space-y-6">
               {/* Booking Summary */}
-              <Card className="border-emerald-200 dark:border-emerald-800">
+              <Card className="border-emerald-200 ">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
@@ -336,7 +336,7 @@ export default function JoinSuccessPage() {
                       <div className="mt-3 pt-3 border-t">
                         <div className="flex justify-between font-bold">
                           <span>Next Payment Due</span>
-                          <span className="text-emerald-700 dark:text-emerald-400">
+                          <span className="text-emerald-700 ">
                             ${bookingData.remainingBalance}
                           </span>
                         </div>
@@ -460,7 +460,7 @@ export default function JoinSuccessPage() {
                           className={cn(
                             "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
                             step.completed
-                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600"
+                              ? "bg-emerald-100  text-emerald-600"
                               : "bg-muted text-muted-foreground"
                           )}
                         >
@@ -498,7 +498,7 @@ export default function JoinSuccessPage() {
             {/* Right Column - Action Cards */}
             <div className="space-y-6">
               {/* Share Celebration */}
-              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10">
+              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 ">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Share2 className="h-5 w-5" />
@@ -548,7 +548,7 @@ export default function JoinSuccessPage() {
                     </div>
 
                     <div className="text-center mt-4">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-emerald-900/30 rounded-full">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white  rounded-full">
                         <Gift className="h-4 w-4 text-amber-600" />
                         <span className="text-sm font-medium">
                           Refer friends & earn $50 credit!
@@ -606,7 +606,7 @@ export default function JoinSuccessPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-emerald-700 dark:text-emerald-400 mb-2">
+                    <div className="text-4xl font-bold text-emerald-700  mb-2">
                       {daysUntilTrek}
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -652,7 +652,7 @@ export default function JoinSuccessPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100  flex items-center justify-center">
                         <Smartphone className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
@@ -664,7 +664,7 @@ export default function JoinSuccessPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-amber-100  flex items-center justify-center">
                         <FileText className="h-5 w-5 text-amber-600" />
                       </div>
                       <div>
@@ -678,7 +678,7 @@ export default function JoinSuccessPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100  flex items-center justify-center">
                         <Heart className="h-5 w-5 text-purple-600" />
                       </div>
                       <div>

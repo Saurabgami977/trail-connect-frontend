@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Mountain, Menu, X, User } from "lucide-react";
+import { useSelector } from "react-redux";
+import UserDropdown from "./UserDropdown";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-
+  const auth = useSelector((state: any) => state.auth);
   const headerBg = "bg-card/95 backdrop-blur-md border-b";
   const textColor = "text-foreground";
   const logoColor = "text-primary";
@@ -47,13 +45,13 @@ const Header = () => {
               Trekking Regions
             </Link>
             <Link
-              href="/treks"
+              href="/user/treks"
               className="hover:opacity-80 transition-opacity font-medium"
             >
               Treks
             </Link>
             <Link
-              href="/create-trek"
+              href="/user/create-trek"
               className="hover:opacity-80 transition-opacity font-medium"
             >
               Create Trek
@@ -68,15 +66,21 @@ const Header = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="hero" size="sm" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button variant="default" size="sm" asChild>
-              <Link href="/register">
-                <User className="h-4 w-4" />
-                Register as Guide
-              </Link>
-            </Button>
+            {auth.isAuthenticated ? (
+              <UserDropdown />
+            ) : (
+              <>
+                <Button variant="hero" size="sm" asChild>
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link href="/register">
+                    <User className="h-4 w-4" />
+                    Register as Guide
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -111,14 +115,14 @@ const Header = () => {
                 Trekking Regions
               </Link>
               <Link
-                href="/treks"
+                href="/user/treks"
                 className="px-4 py-2 rounded-lg hover:bg-muted transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Treks
               </Link>
               <Link
-                href="/create-trek"
+                href="/user/create-trek"
                 className="px-4 py-2 rounded-lg hover:bg-muted transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -133,16 +137,25 @@ const Header = () => {
               </Link>
               <hr className="border-border" />
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                    Log In
-                  </Link>
-                </Button>
-                <Button className="flex-1" asChild>
-                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                    Register
-                  </Link>
-                </Button>
+                {auth?.isAuthenticated ? (
+                  <>Profile</>
+                ) : (
+                  <>
+                    <Button variant="outline" className="flex-1" asChild>
+                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                        Log In
+                      </Link>
+                    </Button>
+                    <Button className="flex-1" asChild>
+                      <Link
+                        href="/register"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Register
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

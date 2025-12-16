@@ -87,6 +87,23 @@
   --animate-slide-in-right: slide-in-right 0.4s ease-out;
   --animate-slide-out-right: slide-out-right 0.4s ease-out;
   --animate-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+
+  /* Add sidebar specific theme variables if not already there */
+  --color-brand-50: hsl(var(--brand-50));
+  --color-brand-100: hsl(var(--brand-100));
+  --color-brand-500: hsl(var(--brand-500));
+  --color-brand-500-12: hsl(var(--brand-500) / 0.12);
+  --color-gray-50: hsl(var(--gray-50));
+  --color-gray-100: hsl(var(--gray-100));
+  --color-gray-300: hsl(var(--gray-300));
+  --color-gray-400: hsl(var(--gray-400));
+  --color-gray-500: hsl(var(--gray-500));
+  --color-gray-700: hsl(var(--gray-700));
+  --color-white-5: hsl(0 0% 100% / 0.05);
+
+  /* Add theme-sm font size if not defined */
+  --text-theme-sm: 0.875rem;
+  --leading-theme-sm: 1.25rem;
 }
 
 /* Define CSS custom properties */
@@ -146,37 +163,19 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  }
 
-  .dark {
-    --background: 162 70% 6%;
-    --foreground: 40 20% 95%;
-    --card: 162 50% 10%;
-    --card-foreground: 40 20% 95%;
-    --popover: 162 50% 10%;
-    --popover-foreground: 40 20% 95%;
-    --primary: 160 50% 50%;
-    --primary-foreground: 162 70% 6%;
-    --secondary: 160 30% 15%;
-    --secondary-foreground: 40 20% 90%;
-    --muted: 160 25% 18%;
-    --muted-foreground: 160 15% 60%;
-    --accent: 35 85% 55%;
-    --accent-foreground: 162 70% 6%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 160 30% 20%;
-    --input: 160 30% 20%;
-    --ring: 160 50% 50%;
+    /* Add brand colors */
+    --brand-50: 240 100% 98%;
+    --brand-100: 240 96% 95%;
+    --brand-500: 240 100% 60%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Add gray colors */
+    --gray-50: 0 0% 98%;
+    --gray-100: 240 5% 96%;
+    --gray-300: 240 5% 65%;
+    --gray-400: 240 5% 45%;
+    --gray-500: 240 5% 35%;
+    --gray-700: 240 5% 25%;
   }
 
   * {
@@ -298,6 +297,132 @@
   50% {
     transform: translateY(-5px);
   }
+}
+
+/* sidebar */
+/* Convert sidebar utilities to v4 format WITHOUT @apply */
+@utility menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  font-size: var(--text-theme-sm);
+  line-height: var(--leading-theme-sm);
+}
+
+/* Regular utilities */
+@utility menu-item-active {
+  background-color: hsl(var(--brand-50));
+  color: hsl(var(--brand-500));
+}
+
+@utility menu-item-inactive {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-item-inactive-hover {
+  background-color: hsl(var(--gray-100));
+}
+
+@utility menu-item-inactive-group-hover {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-item-icon {
+  color: hsl(var(--gray-500));
+}
+
+@utility menu-item-icon-group-hover {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-item-icon-active {
+  color: hsl(var(--brand-500));
+}
+
+@utility menu-item-icon-inactive {
+  color: hsl(var(--gray-500));
+}
+
+@utility menu-item-icon-inactive-group-hover {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-item-arrow {
+  position: relative;
+}
+
+@utility menu-item-arrow-active {
+  transform: rotate(180deg);
+  color: hsl(var(--brand-500));
+}
+
+@utility menu-item-arrow-inactive {
+  color: hsl(var(--gray-500));
+}
+
+@utility menu-item-arrow-inactive-group-hover {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-dropdown-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  font-size: var(--text-theme-sm);
+  line-height: var(--leading-theme-sm);
+  font-weight: 500;
+}
+
+@utility menu-dropdown-item-active {
+  background-color: hsl(var(--brand-50));
+  color: hsl(var(--brand-500));
+}
+
+@utility menu-dropdown-item-inactive {
+  color: hsl(var(--gray-700));
+}
+
+@utility menu-dropdown-item-inactive-hover {
+  background-color: hsl(var(--gray-100));
+}
+
+@utility menu-dropdown-badge {
+  display: block;
+  border-radius: 9999px;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: hsl(var(--brand-500));
+}
+@utility menu-dropdown-badge-active {
+  background-color: hsl(var(--brand-100));
+}
+
+@utility menu-dropdown-badge-inactive {
+  background-color: hsl(var(--brand-50));
+}
+
+@utility menu-dropdown-badge-inactive-group-hover {
+  background-color: hsl(var(--brand-100));
 }
 
 /* Custom utility classes */

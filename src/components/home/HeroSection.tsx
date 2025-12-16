@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search, Shield, Star } from "lucide-react";
 import heroImage from "@/assets/hero-mountains.jpg";
+import { useSelector } from "react-redux";
 
 const HeroSection = () => {
+  const auth = useSelector((state: any) => state.auth);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -50,9 +55,11 @@ const HeroSection = () => {
                 Find Your Guide
               </Link>
             </Button>
-            <Button variant="heroOutline" size="xl" asChild>
-              <Link href="/register">Become a Guide</Link>
-            </Button>
+            {!auth.isAuthenticated && (
+              <Button variant="heroOutline" size="xl" asChild>
+                <Link href="/register">Become a Guide</Link>
+              </Button>
+            )}
           </div>
 
           {/* Stats */}

@@ -16,7 +16,6 @@ import {
 export default function NotFound() {
   return (
     <div className="min-h-screen relative bg-background text-foreground overflow-x-hidden">
-      {/* Simple dark background with subtle texture */}
       <div className="absolute inset-0 bg-linear-to-b from-background via-emerald-950/5 to-background">
         {/* Very subtle grid pattern */}
         <div

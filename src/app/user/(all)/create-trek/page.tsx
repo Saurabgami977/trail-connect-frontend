@@ -1111,13 +1111,13 @@ export default function CreateTrekPage() {
                     </div>
                   </div>
 
-                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg">
+                  <div className="bg-emerald-50  p-3 rounded-lg">
                     <div className="flex justify-between items-center">
                       <div>
                         <div className="text-sm text-muted-foreground">
                           Cost per person
                         </div>
-                        <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                        <div className="text-2xl font-bold text-emerald-700 ">
                           ${costPerPerson.toFixed(2)}
                         </div>
                       </div>

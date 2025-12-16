@@ -715,7 +715,7 @@ export default function TreksListPage() {
                         <div className="text-sm text-muted-foreground">
                           Starting at
                         </div>
-                        <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">
+                        <div className="text-3xl font-bold text-emerald-700 ">
                           ${breakdownForThree.startingPrice.toFixed(0)}
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -838,7 +838,7 @@ export default function TreksListPage() {
                                 >
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center font-bold">
+                                      <div className="w-8 h-8 rounded-full bg-emerald-100  flex items-center justify-center font-bold">
                                         {groupSize}
                                       </div>
                                       <div>
@@ -852,7 +852,7 @@ export default function TreksListPage() {
                                       </div>
                                     </div>
                                     <div className="text-right">
-                                      <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                                      <div className="text-2xl font-bold text-emerald-700 ">
                                         ${breakdown.perPerson.toFixed(0)}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
@@ -934,14 +934,14 @@ export default function TreksListPage() {
                       {/* Savings Banner */}
                       {breakdownForThree.savings &&
                         breakdownForThree.savings > 0 && (
-                          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                          <div className="bg-emerald-50  border border-emerald-200 rounded-lg p-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <TrendingDown className="h-4 w-4 text-emerald-600" />
                                 <span className="font-medium">You save</span>
                               </div>
                               <div className="text-right">
-                                <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                                <div className="text-lg font-bold text-emerald-700 ">
                                   ${breakdownForThree.savings.toFixed(0)}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
@@ -1005,7 +1005,7 @@ export default function TreksListPage() {
             </CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-100  flex items-center justify-center mb-2">
                   <Users className="h-6 w-6 text-emerald-600" />
                 </div>
                 <h4 className="font-semibold">Shared Fixed Costs</h4>
@@ -1017,7 +1017,7 @@ export default function TreksListPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-full bg-amber-100  flex items-center justify-center mb-2">
                   <DollarSign className="h-6 w-6 text-amber-600" />
                 </div>
                 <h4 className="font-semibold">Transparent Pricing</h4>
@@ -1028,7 +1028,7 @@ export default function TreksListPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-full bg-blue-100  flex items-center justify-center mb-2">
                   <TrendingDown className="h-6 w-6 text-blue-600" />
                 </div>
                 <h4 className="font-semibold">Maximum Savings</h4>
@@ -1051,7 +1051,7 @@ export default function TreksListPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="gap-2" asChild>
-                <Link href="/create-trek">
+                <Link href="/user/create-trek">
                   <Plus className="h-5 w-5" />
                   Create Your Own Trek
                 </Link>

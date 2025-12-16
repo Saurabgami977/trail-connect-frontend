@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,14 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -30,16 +24,46 @@ import {
   Lock,
   User,
   Phone,
-  MapPin,
   Upload,
   ArrowRight,
   Shield,
   Globe,
 } from "lucide-react";
 import { TREKKING_REGIONS, LANGUAGES } from "@/lib/constants";
+import { useMutation } from "@tanstack/react-query";
+import { signup } from "@/api/routes/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const RegisterPage = () => {
   const [userType, setUserType] = useState<"tourist" | "guide">("tourist");
+  const router = useRouter();
+
+  const { mutate: registerFunction, isPending } = useMutation({
+    mutationFn: signup,
+    onSuccess: (data) => {
+      toast.success("Registration successful! Please check your email.", {
+        duration: 5000,
+      });
+      router.push("/user");
+      console.log("Registration successful:", data);
+    },
+    onError: (error) => {
+      toast.error(
+        (error as any)?.response?.data?.message ||
+          "Registration failed. Please try again.",
+        {
+          duration: 5000,
+          style: {
+            minWidth: "250px",
+            color: "#fff",
+            backgroundColor: "#ef4444",
+          },
+        }
+      );
+      console.error("Registration error:", error);
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,7 +93,7 @@ const RegisterPage = () => {
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="tourist" className="gap-2">
                       <Globe className="h-4 w-4" />
-                      Tourist
+                      Traveller
                     </TabsTrigger>
                     <TabsTrigger value="guide" className="gap-2">
                       <Shield className="h-4 w-4" />
@@ -81,9 +105,11 @@ const RegisterPage = () => {
 
               <CardContent>
                 {userType === "tourist" ? (
-                  <TouristRegistrationForm />
+                  <TouristRegistrationForm
+                    submitterFunction={registerFunction}
+                  />
                 ) : (
-                  <GuideRegistrationForm />
+                  <GuideRegistrationForm submitterFunction={registerFunction} />
                 )}
 
                 <div className="mt-6 text-center">
@@ -108,9 +134,18 @@ const RegisterPage = () => {
   );
 };
 
-const TouristRegistrationForm = () => {
+const TouristRegistrationForm: React.FC<{
+  submitterFunction: (data: any) => void;
+}> = ({ submitterFunction }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    submitterFunction(data);
+  };
+
   return (
-    <form className="space-y-4">
+    <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
@@ -121,12 +156,13 @@ const TouristRegistrationForm = () => {
               placeholder="John"
               className="pl-10"
               required
+              name="firstName"
             />
           </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="lastName">Last Name</Label>
-          <Input id="lastName" placeholder="Doe" required />
+          <Input id="lastName" placeholder="Doe" required name="lastName" />
         </div>
       </div>
 
@@ -140,6 +176,7 @@ const TouristRegistrationForm = () => {
             placeholder="your@email.com"
             className="pl-10"
             required
+            name="email"
           />
         </div>
       </div>
@@ -154,6 +191,7 @@ const TouristRegistrationForm = () => {
             placeholder="••••••••"
             className="pl-10"
             required
+            name="password"
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -186,12 +224,43 @@ const TouristRegistrationForm = () => {
   );
 };
 
-const GuideRegistrationForm = () => {
+const GuideRegistrationForm: React.FC<{
+  submitterFunction: (data: any) => void;
+}> = ({ submitterFunction }) => {
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
+
+    // You can handle the file upload or validation here
+    if (file) {
+      console.log("File selected:", file.name, file.size, file.type);
+      // Add your file validation logic here
+    }
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    formData.append("regions", JSON.stringify(selectedRegions));
+    formData.append("languages", JSON.stringify(selectedLanguages));
+    const data = Object.fromEntries(formData.entries());
+    submitterFunction({
+      ...data,
+      dailyRate: parseInt(data.dailyRate as string, 10),
+    });
+  };
 
   return (
-    <form className="space-y-6">
+    <form className="space-y-6" onSubmit={handleSubmit}>
       {/* Personal Info */}
       <div>
         <h3 className="font-medium text-foreground mb-4">
@@ -207,12 +276,18 @@ const GuideRegistrationForm = () => {
                 placeholder="Tenzing"
                 className="pl-10"
                 required
+                name="firstName"
               />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="guideLastName">Last Name</Label>
-            <Input id="guideLastName" placeholder="Sherpa" required />
+            <Input
+              id="guideLastName"
+              placeholder="Sherpa"
+              required
+              name="lastName"
+            />
           </div>
         </div>
 
@@ -227,6 +302,7 @@ const GuideRegistrationForm = () => {
                 placeholder="your@email.com"
                 className="pl-10"
                 required
+                name="email"
               />
             </div>
           </div>
@@ -240,13 +316,14 @@ const GuideRegistrationForm = () => {
                 placeholder="+977 98..."
                 className="pl-10"
                 required
+                name="phone"
               />
             </div>
           </div>
         </div>
 
         <div className="space-y-2 mt-4">
-          <Label htmlFor="guidePassword">Password</Label>
+          <Label htmlFor="guidePassword">Create a Strong Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -255,6 +332,7 @@ const GuideRegistrationForm = () => {
               placeholder="••••••••"
               className="pl-10"
               required
+              name="password"
             />
           </div>
         </div>
@@ -269,7 +347,7 @@ const GuideRegistrationForm = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="experience">Years of Experience</Label>
-            <Select>
+            <Select name="yearsOfExperience">
               <SelectTrigger>
                 <SelectValue placeholder="Select years" />
               </SelectTrigger>
@@ -285,6 +363,7 @@ const GuideRegistrationForm = () => {
           <div className="space-y-2">
             <Label htmlFor="dailyRate">Daily Rate (USD)</Label>
             <Input
+              name="dailyRate"
               id="dailyRate"
               type="number"
               placeholder="45"
@@ -361,6 +440,7 @@ const GuideRegistrationForm = () => {
             id="bio"
             placeholder="Tell tourists about yourself, your experience, and what makes your treks special..."
             rows={4}
+            name="bio"
           />
         </div>
       </div>
@@ -372,7 +452,10 @@ const GuideRegistrationForm = () => {
           License Verification (Required)
         </h3>
 
-        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+        <div
+          className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+          onClick={handleClick}
+        >
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Upload className="h-8 w-8 text-primary" />
           </div>
@@ -382,8 +465,37 @@ const GuideRegistrationForm = () => {
           <p className="text-sm text-muted-foreground mb-4">
             JPG, PNG or PDF up to 10MB
           </p>
-          <Button variant="outline" type="button">
+
+          {/* display selected photo in 150x300 */}
+          {selectedFile && selectedFile.type.startsWith("image/") ? (
+            <div className="mb-4">
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="Selected License"
+                className="mx-auto object-contain"
+                style={{ width: 200, height: 200 }}
+              />
+            </div>
+          ) : null}
+
+          {selectedFile && (
+            <p className="text-sm text-primary mb-2">
+              Selected: {selectedFile.name}
+            </p>
+          )}
+
+          <Button variant="outline" type="button" className="relative">
             Choose File
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={handleFileChange}
+              name="licenseFile"
+              id="licenseUploadInput"
+              title="Choose File"
+            />
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">

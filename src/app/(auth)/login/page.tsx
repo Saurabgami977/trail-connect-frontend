@@ -16,15 +16,42 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mountain, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { signin } from "@/api/routes/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { store } from "@/store/store";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
+
+  const { mutate: loginFunc, isPending } = useMutation({
+    mutationFn: signin,
+    onSuccess: (data) => {
+      router.push("/");
+      store.dispatch({
+        type: "auth/login",
+        payload: data,
+      });
+      toast.success("Login successful!");
+    },
+    onError: (error: any) => {
+      store.dispatch({
+        type: "auth/login",
+        payload: { isAuthenticated: false, user: null },
+      });
+      console.error("Login failed:", error);
+      toast.error(
+        error?.response.data.message || "Login failed. Please try again."
+      );
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Will be implemented with Supabase
-    console.log("Login:", { email, password });
+    loginFunc({ email, password });
   };
 
   return (
@@ -49,12 +76,12 @@ const LoginPage = () => {
               <CardHeader>
                 <Tabs defaultValue="tourist" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="tourist">Tourist</TabsTrigger>
+                    <TabsTrigger value="tourist">Traveller</TabsTrigger>
                     <TabsTrigger value="guide">Guide</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="tourist" className="mt-6">
-                    <CardTitle>Tourist Login</CardTitle>
+                    <CardTitle>Traveller Login</CardTitle>
                     <CardDescription>
                       Access your bookings and find guides.
                     </CardDescription>

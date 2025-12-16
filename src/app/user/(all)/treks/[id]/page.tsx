@@ -583,9 +583,9 @@ export default function TrekDetailsPage() {
                       </div>
                     </div>
 
-                    <div className="border-2 border-emerald-500 rounded-lg p-4 bg-emerald-50 dark:bg-emerald-900/20">
+                    <div className="border-2 border-emerald-500 rounded-lg p-4 bg-emerald-50 ">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                        <div className="text-sm font-semibold text-emerald-700 ">
                           Starting at
                         </div>
                         <Badge variant="accent" className="gap-1">
@@ -593,7 +593,7 @@ export default function TrekDetailsPage() {
                           Best Value
                         </Badge>
                       </div>
-                      <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                      <div className="text-3xl font-bold text-emerald-700  mb-1">
                         ${breakdown.totalPerPerson.toFixed(0)}
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -663,7 +663,7 @@ export default function TrekDetailsPage() {
 
                       <div className="flex items-center justify-between font-bold text-lg">
                         <div>Total per person</div>
-                        <div className="text-2xl text-emerald-700 dark:text-emerald-400">
+                        <div className="text-2xl text-emerald-700 ">
                           ${breakdown.totalPerPerson.toFixed(0)}
                         </div>
                       </div>
@@ -1072,7 +1072,7 @@ export default function TrekDetailsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Your price:</span>
-                      <span className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">
+                      <span className="text-3xl font-bold text-emerald-700 ">
                         ${breakdown.totalPerPerson.toFixed(0)}
                       </span>
                     </div>
@@ -1315,10 +1315,10 @@ export default function TrekDetailsPage() {
                 </div>
               </div>
 
-              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+              <div className="bg-emerald-50  rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">You save:</span>
-                  <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                  <span className="font-bold text-emerald-700 ">
                     ${breakdown.savings.toFixed(0)}
                   </span>
                 </div>

@@ -475,7 +475,7 @@ export default function JoinTrekPage() {
                   {step === 2 && (
                     <div className="space-y-6">
                       <div className="text-center mb-6">
-                        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 rounded-full bg-emerald-100  flex items-center justify-center mx-auto mb-4">
                           <Calculator className="h-8 w-8 text-emerald-600" />
                         </div>
                         <h3 className="text-xl font-bold mb-2">
@@ -534,7 +534,7 @@ export default function JoinTrekPage() {
                                   className={cn(
                                     "border-2 rounded-xl p-4 text-center transition-all hover:scale-105",
                                     selectedGroupSize === size
-                                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                                      ? "border-emerald-500 bg-emerald-50 "
                                       : "border-muted hover:border-emerald-300"
                                   )}
                                 >
@@ -544,7 +544,7 @@ export default function JoinTrekPage() {
                                   <div className="text-sm text-muted-foreground mb-2">
                                     people
                                   </div>
-                                  <div className="font-bold text-emerald-700 dark:text-emerald-400">
+                                  <div className="font-bold text-emerald-700 ">
                                     ${calcForSize.toFixed(0)}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
@@ -561,7 +561,7 @@ export default function JoinTrekPage() {
                           </div>
 
                           <div className="mt-4 text-center">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100  rounded-full">
                               <TrendingDown className="h-4 w-4 text-emerald-600" />
                               <span className="text-sm font-medium">
                                 Best value: Group of 3 (Save $
@@ -666,7 +666,7 @@ export default function JoinTrekPage() {
 
                             <div className="flex justify-between font-bold">
                               <span>Total per person:</span>
-                              <span className="text-lg text-emerald-700 dark:text-emerald-400">
+                              <span className="text-lg text-emerald-700 ">
                                 $
                                 {calculateCostBreakdown.totalPerPerson.toFixed(
                                   0
@@ -844,7 +844,7 @@ export default function JoinTrekPage() {
 
                             <div className="flex items-center justify-between font-bold">
                               <div>Total Cost</div>
-                              <div className="text-2xl text-emerald-700 dark:text-emerald-400">
+                              <div className="text-2xl text-emerald-700 ">
                                 $
                                 {calculateCostBreakdown.totalPerPerson.toFixed(
                                   0
@@ -861,7 +861,7 @@ export default function JoinTrekPage() {
                   {step === 3 && (
                     <div className="space-y-6">
                       <div className="text-center mb-6">
-                        <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 rounded-full bg-blue-100  flex items-center justify-center mx-auto mb-4">
                           <Eye className="h-8 w-8 text-blue-600" />
                         </div>
                         <h3 className="text-xl font-bold mb-2">
@@ -1001,7 +1001,7 @@ export default function JoinTrekPage() {
 
                             <div className="flex justify-between font-bold text-lg">
                               <span>Total to Pay Now</span>
-                              <span className="text-emerald-700 dark:text-emerald-400">
+                              <span className="text-emerald-700 ">
                                 ${depositAmount.toFixed(0)}
                               </span>
                             </div>
@@ -1069,7 +1069,7 @@ export default function JoinTrekPage() {
                             </Label>
                           </div>
 
-                          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                          <div className="bg-amber-50  border border-amber-200  rounded-lg p-4">
                             <div className="flex items-start gap-3">
                               <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
                               <div>
@@ -1106,7 +1106,7 @@ export default function JoinTrekPage() {
                   {step === 4 && (
                     <div className="space-y-6">
                       <div className="text-center mb-6">
-                        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 rounded-full bg-emerald-100  flex items-center justify-center mx-auto mb-4">
                           <Lock className="h-8 w-8 text-emerald-600" />
                         </div>
                         <h3 className="text-xl font-bold mb-2">
@@ -1121,7 +1121,7 @@ export default function JoinTrekPage() {
                         {/* Payment Summary */}
                         <div className="bg-muted/50 rounded-lg p-6">
                           <div className="text-center mb-6">
-                            <div className="text-4xl font-bold text-emerald-700 dark:text-emerald-400 mb-2">
+                            <div className="text-4xl font-bold text-emerald-700  mb-2">
                               ${depositAmount.toFixed(0)}
                             </div>
                             <div className="text-muted-foreground">
@@ -1338,7 +1338,7 @@ export default function JoinTrekPage() {
                   <div>
                     <div className="text-sm font-medium mb-2">Organized by</div>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100  flex items-center justify-center">
                         <User className="h-4 w-4 text-emerald-600" />
                       </div>
                       <div>
@@ -1373,7 +1373,7 @@ export default function JoinTrekPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Your price:</span>
-                      <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                      <span className="text-2xl font-bold text-emerald-700 ">
                         ${calculateCostBreakdown.totalPerPerson.toFixed(0)}
                       </span>
                     </div>
@@ -1384,7 +1384,7 @@ export default function JoinTrekPage() {
                       </span>
                     </div>
 
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 mt-4">
+                    <div className="bg-emerald-50  rounded-lg p-3 mt-4">
                       <div className="flex items-center gap-2 mb-1">
                         <ThumbsUp className="h-4 w-4 text-emerald-600" />
                         <span className="font-medium">Great choice!</span>

@@ -562,7 +562,7 @@ export default function AllRegionsPage() {
                             {details.seasonality.map((season, i) => (
                               <div
                                 key={`${season}-${i}`}
-                                className="flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded text-sm"
+                                className="flex items-center gap-1 px-2 py-1 bg-emerald-50  rounded text-sm"
                               >
                                 {getSeasonIcon(season)}
                                 <span>{season}</span>
