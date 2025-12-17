@@ -7,6 +7,8 @@ import RegionForm from "./region-form";
 import RegionsTable from "./regions-table";
 import { Mountain, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getTrekkingRegions } from "@/api/routes/trekking-regions";
 
 // Mock data - replace with actual API calls
 const mockRegions = [
@@ -411,31 +413,28 @@ const mockRegions = [
 ];
 
 export default function TrekkingRegionsPage() {
-  const [regions, setRegions] = useState(mockRegions);
+  const [regions, setRegions] = useState();
   const [activeTab, setActiveTab] = useState("list");
   const [selectedRegion, setSelectedRegion] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch regions from API
-  const fetchRegions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/admin/trekking-regions");
-      if (response.ok) {
-        const data = await response.json();
-        setRegions(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch regions:", error);
-      toast.error("Failed to load regions");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: trekkingRegions,
+    isPending,
+    isError,
+    isSuccess,
+    refetch: fetchRegions,
+  } = useQuery({
+    queryFn: getTrekkingRegions,
+    queryKey: ["trekking-regions"],
+  });
 
   useEffect(() => {
-    fetchRegions();
-  }, []);
+    if (isSuccess && trekkingRegions) {
+      console.log(trekkingRegions);
+      setRegions(trekkingRegions);
+    }
+  }, [isSuccess, trekkingRegions]);
 
   const handleCreate = () => {
     setSelectedRegion(null);
@@ -448,7 +447,7 @@ export default function TrekkingRegionsPage() {
   };
 
   const handleDelete = (id: string) => {
-    setRegions((prev) => prev.filter((region) => region.id !== id));
+    setRegions((prev) => prev.filter((region) => region._id !== id));
   };
 
   const handleFormSuccess = () => {
@@ -475,7 +474,11 @@ export default function TrekkingRegionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={fetchRegions} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => fetchRegions()}
+            disabled={loading}
+          >
             <RefreshCw
               className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
             />
@@ -497,7 +500,7 @@ export default function TrekkingRegionsPage() {
         <TabsList>
           <TabsTrigger value="list" className="flex items-center gap-2">
             <Mountain className="h-4 w-4" />
-            All Regions ({regions.length})
+            All Regions ({regions?.length})
           </TabsTrigger>
           <TabsTrigger value="create" disabled={activeTab === "edit"}>
             Create New
@@ -508,12 +511,14 @@ export default function TrekkingRegionsPage() {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          <RegionsTable
-            regions={regions}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onRefresh={fetchRegions}
-          />
+          {isSuccess && regions && (
+            <RegionsTable
+              regions={regions}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onRefresh={fetchRegions}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="create">

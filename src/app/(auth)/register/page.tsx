@@ -29,11 +29,12 @@ import {
   Shield,
   Globe,
 } from "lucide-react";
-import { TREKKING_REGIONS, LANGUAGES } from "@/lib/constants";
-import { useMutation } from "@tanstack/react-query";
+import { LANGUAGES } from "@/lib/constants";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { signup } from "@/api/routes/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getTrekkingRegions } from "@/api/routes/trekking-regions";
 
 const RegisterPage = () => {
   const [userType, setUserType] = useState<"tourist" | "guide">("tourist");
@@ -232,6 +233,16 @@ const GuideRegistrationForm: React.FC<{
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const {
+    data: trekkingRegions,
+    isSuccess,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ["trekking-regions"],
+    queryFn: getTrekkingRegions,
+  });
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSelectedFile(file);
@@ -247,16 +258,58 @@ const GuideRegistrationForm: React.FC<{
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    formData.append("regions", JSON.stringify(selectedRegions));
-    formData.append("languages", JSON.stringify(selectedLanguages));
-    const data = Object.fromEntries(formData.entries());
-    submitterFunction({
-      ...data,
-      dailyRate: parseInt(data.dailyRate as string, 10),
-    });
+
+    try {
+      const jsonPayload = {
+        firstName: (e.target as any).firstName.value,
+        lastName: (e.target as any).lastName.value,
+        email: (e.target as any).email.value,
+        phone: (e.target as any).phone.value,
+        password: (e.target as any).password.value,
+        yearsOfExperience: (e.target as any).yearsOfExperience.value,
+        dailyRate: (e.target as any).dailyRate.value,
+        bio: (e.target as any).bio.value,
+        regions: selectedRegions,
+        languages: selectedLanguages,
+      };
+
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(jsonPayload));
+
+      if (selectedFile) {
+        formData.append("licenseFile", selectedFile);
+      }
+
+      const url = "http://localhost:4000/api/auth/register-guide";
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to register guide. Please try again."
+        );
+      }
+
+      toast.success("Registration successful! Please check your email.", {
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error preparing form data:", error);
+      toast.error((error as Error).message || "Registration failed. Please try again.", {
+        duration: 5000,
+        style: {
+          minWidth: "250px",
+          color: "#fff",
+          backgroundColor: "#ef4444",
+        },
+      });
+    }
   };
 
   return (
@@ -375,32 +428,40 @@ const GuideRegistrationForm: React.FC<{
 
         <div className="space-y-2 mt-4">
           <Label>Operating Regions</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {TREKKING_REGIONS.map((region) => (
-              <label
-                key={region.id}
-                className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedRegions.includes(region.id)
-                    ? "border-primary bg-primary/5"
-                    : "hover:bg-muted/50"
-                }`}
-              >
-                <Checkbox
-                  checked={selectedRegions.includes(region.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedRegions([...selectedRegions, region.id]);
-                    } else {
-                      setSelectedRegions(
-                        selectedRegions.filter((r) => r !== region.id)
-                      );
-                    }
-                  }}
-                />
-                <span className="text-sm">{region.name}</span>
-              </label>
-            ))}
-          </div>
+          {isSuccess ? (
+            <div className="grid grid-cols-2 gap-2">
+              {trekkingRegions?.map((region) => (
+                <label
+                  key={region.id}
+                  className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedRegions.includes(region._id)
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted/50"
+                  }`}
+                >
+                  <Checkbox
+                    checked={selectedRegions.includes(region._id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedRegions([...selectedRegions, region._id]);
+                      } else {
+                        setSelectedRegions(
+                          selectedRegions.filter((r) => r !== region._id)
+                        );
+                      }
+                    }}
+                  />
+                  <span className="text-sm">{region.name}</span>
+                </label>
+              ))}
+            </div>
+          ) : isPending ? (
+            <p>Loading regions...</p>
+          ) : isError ? (
+            <p className="text-sm text-red-500">
+              Failed to load regions. Please try again later.
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2 mt-4">

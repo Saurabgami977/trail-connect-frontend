@@ -351,7 +351,7 @@ export default function RegionForm({
         region ? "Region updated successfully!" : "Region created successfully!"
       );
 
-      // if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Error saving region:", error);
       toast.error(error.message || "Failed to save region");

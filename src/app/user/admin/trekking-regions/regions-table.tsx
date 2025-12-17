@@ -113,7 +113,7 @@ export default function RegionsTable({
   const [loading, setLoading] = useState(false);
 
   // Filter regions
-  const filteredRegions = initialRegions.filter((region) => {
+  const filteredRegions = initialRegions?.filter((region) => {
     const matchesSearch =
       region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       region.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,7 +136,7 @@ export default function RegionsTable({
     return matchesSearch && matchesDifficulty && matchesStatus;
   });
 
-  const difficultyCounts = initialRegions.reduce((acc, region) => {
+  const difficultyCounts = initialRegions?.reduce((acc, region) => {
     acc[region.difficulty] = (acc[region.difficulty] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -242,10 +242,10 @@ export default function RegionsTable({
                 <DropdownMenuItem onClick={() => setSelectedDifficulty("all")}>
                   All Difficulties
                   <Badge variant="outline" className="ml-auto">
-                    {initialRegions.length}
+                    {initialRegions?.length}
                   </Badge>
                 </DropdownMenuItem>
-                {Object.entries(difficultyCounts).map(([diff, count]) => (
+                {Object?.entries(difficultyCounts)?.map(([diff, count]) => (
                   <DropdownMenuItem
                     key={diff}
                     onClick={() => setSelectedDifficulty(diff)}
@@ -408,7 +408,10 @@ export default function RegionsTable({
                     <div className="relative h-10 w-10 overflow-hidden rounded">
                       {region.image ? (
                         <Image
-                          src={region.image}
+                          src={`${
+                            process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                            region.image
+                          }`}
                           alt={region.name}
                           fill
                           className="object-cover"

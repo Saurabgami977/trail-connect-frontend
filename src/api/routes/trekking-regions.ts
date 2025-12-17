@@ -6,3 +6,10 @@ export const createTrekkingRegion = async (data: any) => {
   });
   return response.data;
 };
+
+export const getTrekkingRegions = async () => {
+  const response = await AxiosService.get("/treks/regions", {
+    withCredentials: true,
+  });
+  return response.data;
+};

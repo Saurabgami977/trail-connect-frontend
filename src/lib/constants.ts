@@ -39,6 +39,9 @@ export const LANGUAGES = [
   "French",
   "Spanish",
   "Italian",
+  "Russian",
+  "Dutch",
+  "Arabic",
 ];
 
 export const EXTRA_SERVICES = [

@@ -969,7 +969,7 @@ export default function TreksListPage() {
 
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" asChild>
-                          <Link href={`/treks/${trek.id}`}>
+                          <Link href={`/user/treks/${trek.id}`}>
                             <Eye className="h-4 w-4 mr-1" />
                             Details
                           </Link>
@@ -982,7 +982,7 @@ export default function TreksListPage() {
                           }
                           asChild
                         >
-                          <Link href={`/treks/${trek.id}/join`}>
+                          <Link href={`/user/treks/${trek.id}/join`}>
                             <UserPlus className="h-4 w-4 mr-1" />
                             Join Now
                           </Link>
