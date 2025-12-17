@@ -37,10 +37,13 @@ import {
   Mountain,
   MapPin,
   Clock,
+  Ruler,
   Users,
+  TrendingUp,
   CheckCircle,
   XCircle,
   Filter,
+  Star,
   Download,
   Upload,
 } from "lucide-react";
@@ -48,17 +51,26 @@ import Image from "next/image";
 import { toast } from "sonner";
 
 interface Region {
-  id: string;
+  _id: string;
   name: string;
   slug: string;
-  country: string;
+  location: string;
   difficulty: string;
-  duration: string;
-  altitude: string;
+  minAltitude: number;
+  maxAltitude: number;
+  avgDuration: number;
+  avgDistance: number;
   isActive: boolean;
-  imageUrl: string;
+  featured: boolean;
+  popularity: number;
+  image?: string;
   createdAt: string;
-  guideCount: number;
+  bestSeasons: string[];
+  statistics?: {
+    totalTreks?: number;
+    successRate?: number;
+    avgGroupSize?: number;
+  };
 }
 
 interface RegionsTableProps {
@@ -72,7 +84,19 @@ const difficultyColors: Record<string, string> = {
   easy: "bg-emerald-100 text-emerald-700",
   moderate: "bg-amber-100 text-amber-700",
   challenging: "bg-orange-100 text-orange-700",
-  strenuous: "bg-red-100 text-red-700",
+  difficult: "bg-red-100 text-red-700",
+  extreme: "bg-purple-100 text-purple-700",
+};
+
+const getDifficultyLabel = (difficulty: string) => {
+  const labels: Record<string, string> = {
+    easy: "Easy",
+    moderate: "Moderate",
+    challenging: "Challenging",
+    difficult: "Difficult",
+    extreme: "Extreme",
+  };
+  return labels[difficulty] || difficulty;
 };
 
 export default function RegionsTable({
@@ -83,30 +107,35 @@ export default function RegionsTable({
 }: RegionsTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
-  const [selectedCountry, setSelectedCountry] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [regionToDelete, setRegionToDelete] = useState<string | null>(null);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Filter regions
   const filteredRegions = initialRegions.filter((region) => {
     const matchesSearch =
       region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      region.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      region.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       region.slug.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDifficulty =
       selectedDifficulty === "all" || region.difficulty === selectedDifficulty;
 
-    const matchesCountry =
-      selectedCountry === "all" || region.country === selectedCountry;
+    const matchesStatus =
+      selectedStatus === "all"
+        ? true
+        : selectedStatus === "active"
+        ? region.isActive
+        : selectedStatus === "inactive"
+        ? !region.isActive
+        : selectedStatus === "featured"
+        ? region.featured
+        : true;
 
-    return matchesSearch && matchesDifficulty && matchesCountry;
+    return matchesSearch && matchesDifficulty && matchesStatus;
   });
 
-  const countries = Array.from(new Set(initialRegions.map((r) => r.country)));
   const difficultyCounts = initialRegions.reduce((acc, region) => {
     acc[region.difficulty] = (acc[region.difficulty] || 0) + 1;
     return acc;
@@ -140,66 +169,43 @@ export default function RegionsTable({
     }
   };
 
-  const handleExport = async () => {
+  const handleStatusToggle = async (id: string, currentStatus: boolean) => {
     try {
-      const response = await fetch("/api/admin/trekking-regions/export");
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `trekking-regions-${
-        new Date().toISOString().split("T")[0]
-      }.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast.success("Regions exported successfully");
-      setExportDialogOpen(false);
-    } catch (error) {
-      console.error("Export failed:", error);
-      toast.error("Export failed");
-    }
-  };
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setLoading(true);
-    try {
-      const response = await fetch("/api/admin/trekking-regions/import", {
-        method: "POST",
-        body: formData,
+      const response = await fetch(`/api/admin/trekking-regions/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentStatus }),
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      if (!response.ok) throw new Error("Failed to update status");
 
-      toast.success("Regions imported successfully");
-      setImportDialogOpen(false);
+      toast.success(`Region ${!currentStatus ? "activated" : "deactivated"}`);
       onRefresh();
     } catch (error) {
-      console.error("Import failed:", error);
-      toast.error("Import failed. Please check the file format.");
-    } finally {
-      setLoading(false);
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
     }
   };
 
-  const getDifficultyLabel = (difficulty: string) => {
-    const labels: Record<string, string> = {
-      easy: "Easy",
-      moderate: "Moderate",
-      challenging: "Challenging",
-      strenuous: "Strenuous",
-    };
-    return labels[difficulty] || difficulty;
+  const handleFeaturedToggle = async (id: string, currentFeatured: boolean) => {
+    try {
+      const response = await fetch(
+        `/api/admin/trekking-regions/${id}/featured`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ featured: !currentFeatured }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update featured status");
+
+      toast.success(`Region ${!currentFeatured ? "featured" : "unfeatured"}`);
+      onRefresh();
+    } catch (error) {
+      console.error("Error updating featured status:", error);
+      toast.error("Failed to update featured status");
+    }
   };
 
   return (
@@ -210,7 +216,7 @@ export default function RegionsTable({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search regions by name, country, or slug..."
+              placeholder="Search regions by name, location, or slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -253,7 +259,9 @@ export default function RegionsTable({
                             ? "bg-amber-500"
                             : diff === "challenging"
                             ? "bg-orange-500"
-                            : "bg-red-500"
+                            : diff === "difficult"
+                            ? "bg-red-500"
+                            : "bg-purple-500"
                         }`}
                       />
                       {getDifficultyLabel(diff)}
@@ -269,58 +277,34 @@ export default function RegionsTable({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Country
-                  {selectedCountry !== "all" && (
-                    <Badge className="ml-2">
-                      {
-                        initialRegions.filter(
-                          (r) => r.country === selectedCountry
-                        ).length
-                      }
-                    </Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Filter by Country</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSelectedCountry("all")}>
-                  All Countries
-                </DropdownMenuItem>
-                {countries.map((country) => (
-                  <DropdownMenuItem
-                    key={country}
-                    onClick={() => setSelectedCountry(country)}
-                  >
-                    {country}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <MoreHorizontal className="h-4 w-4" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Status
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Import CSV
+                <DropdownMenuItem onClick={() => setSelectedStatus("all")}>
+                  All Status
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                <DropdownMenuItem onClick={() => setSelectedStatus("active")}>
+                  Active Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedStatus("inactive")}>
+                  Inactive Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedStatus("featured")}>
+                  Featured Only
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button variant="outline" onClick={onRefresh}>
+              Refresh
+            </Button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
           <div className="rounded-lg border p-4">
             <div className="flex items-center gap-2">
               <Mountain className="h-5 w-5 text-muted-foreground" />
@@ -329,15 +313,6 @@ export default function RegionsTable({
               </span>
             </div>
             <p className="text-sm text-muted-foreground">Total Regions</p>
-          </div>
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-bold">
-                {initialRegions.reduce((sum, r) => sum + r.guideCount, 0)}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">Total Guides</p>
           </div>
           <div className="rounded-lg border p-4">
             <div className="flex items-center gap-2">
@@ -357,6 +332,41 @@ export default function RegionsTable({
             </div>
             <p className="text-sm text-muted-foreground">Inactive</p>
           </div>
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-500" />
+              <span className="text-2xl font-bold">
+                {initialRegions.filter((r) => r.featured).length}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">Featured</p>
+          </div>
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-bold">
+                {initialRegions.reduce(
+                  (sum, r) => sum + (r.statistics?.totalTreks || 0),
+                  0
+                )}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">Total Treks</p>
+          </div>
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-bold">
+                {Math.round(
+                  initialRegions.reduce(
+                    (sum, r) => sum + (r.popularity || 0),
+                    0
+                  ) / initialRegions.length
+                ) || 0}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">Avg Popularity</p>
+          </div>
         </div>
       </div>
 
@@ -365,22 +375,23 @@ export default function RegionsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Image</TableHead>
+              <TableHead className="w-[60px]">Image</TableHead>
               <TableHead>Region Name</TableHead>
-              <TableHead>Country</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Difficulty</TableHead>
-              <TableHead>Duration</TableHead>
               <TableHead>Altitude</TableHead>
-              <TableHead>Guides</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead>Distance</TableHead>
+              <TableHead>Seasons</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>Popularity</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredRegions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8">
+                <TableCell colSpan={11} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <Mountain className="h-12 w-12 text-muted-foreground" />
                     <p className="text-muted-foreground">No regions found</p>
@@ -392,29 +403,35 @@ export default function RegionsTable({
               </TableRow>
             ) : (
               filteredRegions.map((region) => (
-                <TableRow key={region.id}>
+                <TableRow key={region._id}>
                   <TableCell>
-                    <div className="relative h-12 w-16 overflow-hidden rounded">
-                      <Image
-                        src={region.imageUrl || "/placeholder.jpg"}
-                        alt={region.name}
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="relative h-10 w-10 overflow-hidden rounded">
+                      {region.image ? (
+                        <Image
+                          src={region.image}
+                          alt={region.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-muted">
+                          <Mountain className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
                     <div>
                       <p>{region.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         /{region.slug}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      {region.country}
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{region.location}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -423,37 +440,72 @@ export default function RegionsTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      {region.duration}
-                    </div>
-                  </TableCell>
-                  <TableCell>{region.altitude}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      {region.guideCount}
+                    <div className="text-sm">
+                      {region.minAltitude}-{region.maxAltitude}m
                     </div>
                   </TableCell>
                   <TableCell>
-                    {region.isActive ? (
-                      <Badge
-                        variant="outline"
-                        className="border-emerald-200 bg-emerald-50 text-emerald-700"
-                      >
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="border-muted bg-muted text-muted-foreground"
-                      >
-                        Inactive
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{region.avgDuration}d</span>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(region.createdAt).toLocaleDateString()}
+                    <div className="flex items-center gap-1">
+                      <Ruler className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{region.avgDistance}km</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {region.bestSeasons.slice(0, 2).map((season) => (
+                        <Badge
+                          key={season}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {season}
+                        </Badge>
+                      ))}
+                      {region.bestSeasons.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{region.bestSeasons.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {region.isActive ? (
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-200 bg-emerald-50 text-emerald-700 text-xs"
+                        >
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-muted bg-muted text-muted-foreground text-xs"
+                        >
+                          Inactive
+                        </Badge>
+                      )}
+                      {region.featured && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 text-amber-700 text-xs"
+                        >
+                          Featured
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{region.popularity}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -475,11 +527,45 @@ export default function RegionsTable({
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleStatusToggle(region._id, region.isActive)
+                          }
+                        >
+                          {region.isActive ? (
+                            <>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Activate
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleFeaturedToggle(region._id, region.featured)
+                          }
+                        >
+                          {region.featured ? (
+                            <>
+                              <Star className="mr-2 h-4 w-4" />
+                              Unfeature
+                            </>
+                          ) : (
+                            <>
+                              <Star className="mr-2 h-4 w-4" />
+                              Feature
+                            </>
+                          )}
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => {
-                            setRegionToDelete(region.id);
+                            setRegionToDelete(region._id);
                             setDeleteDialogOpen(true);
                           }}
                         >
@@ -496,16 +582,14 @@ export default function RegionsTable({
         </Table>
       </div>
 
-      {/* Pagination would go here */}
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Region</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this region? This action cannot be
-              undone. All associated guides and bookings will be affected.
+              Are you sure you want to delete this trekking region? This action
+              cannot be undone. All associated data will be permanently removed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -522,96 +606,6 @@ export default function RegionsTable({
               disabled={loading}
             >
               {loading ? "Deleting..." : "Delete Region"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import Regions</DialogTitle>
-            <DialogDescription>
-              Upload a CSV file with region data. The file should include
-              columns: name, slug, country, difficulty, duration, altitude,
-              description
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg border-2 border-dashed p-8 text-center">
-              <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-sm text-muted-foreground">
-                Drag and drop your CSV file here, or click to browse
-              </p>
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={handleImport}
-                className="mt-4 cursor-pointer"
-                disabled={loading}
-              />
-            </div>
-            <div className="rounded-lg bg-muted p-4">
-              <p className="text-sm font-medium">CSV Format:</p>
-              <pre className="mt-2 text-xs">
-                {`name,slug,country,difficulty,duration,altitude,description
-Everest Base Camp,everest-base-camp,Nepal,moderate,"12-14 days","5,545m","Trek to the base of the world's highest mountain"
-Annapurna Circuit,annapurna-circuit,Nepal,challenging,"15-20 days","5,416m","Classic trek around the Annapurna massif"`}
-              </pre>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setImportDialogOpen(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Export Dialog */}
-      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Export Regions</DialogTitle>
-            <DialogDescription>
-              Export all regions to a CSV file. The file will include all region
-              details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg bg-muted p-4">
-              <p className="text-sm font-medium">Export Options</p>
-              <div className="mt-2 space-y-2">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked className="rounded" />
-                  <span className="text-sm">Include all region details</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked className="rounded" />
-                  <span className="text-sm">Include guide counts</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked className="rounded" />
-                  <span className="text-sm">Format dates as YYYY-MM-DD</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setExportDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
             </Button>
           </DialogFooter>
         </DialogContent>
