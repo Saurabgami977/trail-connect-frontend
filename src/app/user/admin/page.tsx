@@ -124,7 +124,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="pt-24 pb-16">
+      <main className="pb-16">
         <div className="container mx-auto px-4">
           {/* Admin Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

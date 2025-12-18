@@ -273,6 +273,7 @@ const GuideRegistrationForm: React.FC<{
         bio: (e.target as any).bio.value,
         regions: selectedRegions,
         languages: selectedLanguages,
+        role: "guide",
       };
 
       const formData = new FormData();
@@ -301,14 +302,17 @@ const GuideRegistrationForm: React.FC<{
       });
     } catch (error) {
       console.error("Error preparing form data:", error);
-      toast.error((error as Error).message || "Registration failed. Please try again.", {
-        duration: 5000,
-        style: {
-          minWidth: "250px",
-          color: "#fff",
-          backgroundColor: "#ef4444",
-        },
-      });
+      toast.error(
+        (error as Error).message || "Registration failed. Please try again.",
+        {
+          duration: 5000,
+          style: {
+            minWidth: "250px",
+            color: "#fff",
+            backgroundColor: "#ef4444",
+          },
+        }
+      );
     }
   };
 

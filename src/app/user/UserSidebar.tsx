@@ -32,29 +32,6 @@ const navItems: NavItem[] = [
     path: "/user/admin",
   },
   {
-    icon: <Activity />,
-    name: "Users",
-    subItems: [
-      { name: "All Users", path: "/user/admin/users", pro: false },
-      { name: "Blocked Users", path: "/user/admin/blocked-users", pro: false },
-      { name: "Guides", path: "/user/admin/guides", pro: false },
-      { name: "Staff", path: "/user/admin/staff", pro: false },
-    ],
-  },
-  {
-    icon: <AlertTriangle />,
-    name: "Guides",
-    subItems: [
-      { name: "All Guides", path: "/user/admin/guides", pro: false },
-      {
-        name: "Verification",
-        path: "/user/admin/guides/verification",
-        pro: false,
-      },
-      { name: "Rejected", path: "/user/admin/guides/rejected", pro: false },
-    ],
-  },
-  {
     icon: <CalenderIcon />,
     name: "Invoices",
     path: "/user/admin/invoices",
@@ -77,22 +54,6 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <Activity />,
-    name: "Trekking",
-    subItems: [
-      {
-        name: "Trekking Regions",
-        path: "/user/admin/trekking-regions",
-        pro: false,
-      },
-      {
-        name: "Trekking Routes",
-        path: "/user/admin/trekking-routes",
-        pro: false,
-      },
-    ],
-  },
   {
     icon: <PlugInIcon />,
     name: "Logout",

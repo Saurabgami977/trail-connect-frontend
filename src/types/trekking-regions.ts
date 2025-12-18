@@ -30,13 +30,20 @@ export interface RegionDetails {
 }
 
 export interface Guide {
-  id: string;
-  name: string;
-  rating: number;
-  experience: number;
+  _id: string;
+  user: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+  };
   dailyRate: number;
   verified: boolean;
   regions: string[];
+  availability: string[];
+  avgRating: number;
+  certifications: string[];
+  createdAt: string;
 }
 
 export type DifficultyFilter = "all" | "easy" | "moderate" | "challenging";
