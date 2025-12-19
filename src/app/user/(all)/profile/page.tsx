@@ -930,58 +930,6 @@ const EditProfilePage = () => {
                       </div>
                     </div>
 
-                    {/* Languages */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">
-                        Languages You Speak *
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <Input
-                            value={languagesInput}
-                            onChange={(e) => setLanguagesInput(e.target.value)}
-                            placeholder="e.g., English, Nepali, Spanish"
-                            onKeyPress={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                addLanguage("guide");
-                              }
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => addLanguage("guide")}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        {guideErrors.languages && (
-                          <p className="text-sm text-red-600">
-                            {guideErrors.languages.message}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-2">
-                          {watchGuide("languages")?.map((lang, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="gap-1"
-                            >
-                              <Languages className="h-3 w-3" />
-                              {lang}
-                              <button
-                                type="button"
-                                onClick={() => removeLanguage("guide", index)}
-                                className="ml-1 rounded-full hover:bg-muted"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Expertise Regions */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">
@@ -1078,9 +1026,11 @@ const EditProfilePage = () => {
                       </div>
                     </div>
 
-                    {/* Guide Bio */}
+                    {/* Guide Desc */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Guide Bio</h3>
+                      <h3 className="text-lg font-semibold">
+                        Guide Description
+                      </h3>
                       <div className="space-y-2">
                         <Textarea
                           {...registerGuide("bio")}
