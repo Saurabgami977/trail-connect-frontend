@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSelector } from "react-redux";
 import { getTrekkingRegions } from "@/api/routes/trekking-regions";
-import { getByUserId } from "@/api/routes/guide";
+import { getByUserId, updateGuide } from "@/api/routes/guide";
 import { toast } from "sonner";
 
 // Import UI components to match the region form
@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { CountryRegionData } from "react-country-region-selector";
 import { updateUserProfile } from "@/api/routes/user";
+import { error } from "console";
 
 // Zod schemas for validation
 const userProfileSchema = z.object({
@@ -100,7 +101,6 @@ const guideProfileSchema = z.object({
   licenseNumber: z.string().optional(),
   licenseExpiry: z.string().optional(),
   yearsOfExperience: z.number().min(0).max(50),
-  languages: z.array(z.string()).min(1, "Select at least one language"),
   bio: z.string().max(1000, "Bio must be less than 1000 characters").optional(),
   specializations: z.array(z.string()).optional(),
   certifications: z.array(z.string()).optional(),
@@ -117,10 +117,6 @@ const guideProfileSchema = z.object({
   pricing: z
     .object({
       dailyRate: z.number().min(0),
-      minGroupSize: z.number().min(1).optional(),
-      maxGroupSize: z.number().min(1).optional(),
-      soloPremium: z.number().min(0).optional(),
-      peakSeasonSurcharge: z.number().min(0).max(100).optional(),
     })
     .optional(),
   expertiseRegions: z.array(z.string()).min(1, "Select at least one region"),
@@ -181,7 +177,6 @@ const EditProfilePage = () => {
     formState: { errors: userErrors, isDirty: isUserDirty },
     reset: resetUser,
     watch: watchUser,
-    getValues: getUserValues,
   } = useForm<UserProfileFormData>({
     resolver: zodResolver(userProfileSchema),
   });
@@ -194,12 +189,12 @@ const EditProfilePage = () => {
     reset: resetGuide,
     setValue: setGuideValue,
     watch: watchGuide,
+    getValues,
   } = useForm<GuideProfileFormData>({
     resolver: zodResolver(guideProfileSchema),
     defaultValues: {
       type: "independent",
       yearsOfExperience: 0,
-      languages: [],
       pricing: {
         dailyRate: 0,
       },
@@ -210,8 +205,6 @@ const EditProfilePage = () => {
   // Update forms when data loads
   useEffect(() => {
     if (userProfile) {
-      console.log("API gender value:", userProfile.gender);
-
       resetUser({
         firstName: userProfile.firstName,
         lastName: userProfile.lastName,
@@ -242,19 +235,22 @@ const EditProfilePage = () => {
         licenseNumber: guideProfile.licenseNumber || "",
         licenseExpiry: guideProfile.licenseExpiry?.split("T")[0] || "",
         yearsOfExperience: guideProfile.yearsOfExperience,
-        languages: guideProfile.languages || [],
         bio: guideProfile.bio || "",
         specializations: guideProfile.specializations || [],
         certifications: guideProfile.certifications || [],
         training: guideProfile.training || [],
         contactInfo: guideProfile.contactInfo || {},
-        pricing: guideProfile.pricing || { dailyRate: 0 },
+        pricing: guideProfile.pricing || {
+          dailyRate: 0,
+        },
         expertiseRegions:
           guideProfile.expertiseRegions?.map((r) => r._id) || [],
         gearProvided: guideProfile.gearProvided || [],
         insurance: guideProfile.insurance || {},
         bankDetails: guideProfile.bankDetails || {},
       });
+
+      console.log("Guide profile loaded:", guideProfile);
     }
   }, [guideProfile, resetGuide]);
 
@@ -278,11 +274,8 @@ const EditProfilePage = () => {
 
   // Update guide profile mutation
   const updateGuideMutation = useMutation({
-    mutationFn: async (data: GuideProfileFormData) => {
-      const response = await axios.put("/api/guides/profile", data);
-      return response.data;
-    },
-    onSuccess: () => {
+    mutationFn: updateGuide,
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["guideProfile"] });
       toast.success("Guide profile updated successfully!");
     },
@@ -344,9 +337,6 @@ const EditProfilePage = () => {
       if (type === "user") {
         const current = watchUser("languages") || [];
         setUserValue("languages", [...current, input.trim()]);
-      } else {
-        const current = watchGuide("languages") || [];
-        setGuideValue("languages", [...current, input.trim()]);
       }
       setLanguagesInput("");
     }
@@ -358,10 +348,6 @@ const EditProfilePage = () => {
       const current = watchUser("languages") || [];
       const updated = current.filter((_, i) => i !== index);
       setUserValue("languages", updated);
-    } else {
-      const current = watchGuide("languages") || [];
-      const updated = current.filter((_, i) => i !== index);
-      setGuideValue("languages", updated);
     }
   };
 
@@ -805,8 +791,22 @@ const EditProfilePage = () => {
             {isGuide && (
               <TabsContent value="guide">
                 <form
-                  onSubmit={handleSubmitGuide((data) =>
-                    updateGuideMutation.mutate(data)
+                  onSubmit={handleSubmitGuide(
+                    (data) => {
+                      console.log("VALID DATA", data);
+
+                      if (!guideProfile?._id) return;
+
+                      updateGuideMutation.mutate(
+                        removeEmptyAndNestedEmpty({
+                          ...data,
+                          _id: guideProfile._id,
+                        })
+                      );
+                    },
+                    (errors) => {
+                      console.log("VALIDATION ERRORS", errors);
+                    }
                   )}
                 >
                   <CardContent className="space-y-8">
@@ -941,12 +941,23 @@ const EditProfilePage = () => {
                             key={region._id}
                             className="flex items-center space-x-2 cursor-pointer p-2 rounded-lg border hover:bg-muted/50"
                           >
+                            {/* <input
+                              type="checkbox"
+                              value={region._id}
+                              defaultChecked={watchGuide(
+                                "expertiseRegions"
+                              )?.includes(region._id)}
+                              {...registerGuide("expertiseRegions")}
+                              className="h-4 w-4 text-primary"
+                            /> */}
+
                             <input
                               type="checkbox"
                               value={region._id}
                               {...registerGuide("expertiseRegions")}
                               className="h-4 w-4 text-primary"
                             />
+
                             <span className="text-sm">{region.name}</span>
                           </label>
                         ))}
@@ -1060,8 +1071,8 @@ const EditProfilePage = () => {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={!isGuideDirty || updateGuideMutation.isPending}
-                      className="gap-2"
+                      disabled={updateGuideMutation.isPending}
+                      className="gap-2 cursor-pointer"
                     >
                       <Save className="h-4 w-4" />
                       {updateGuideMutation.isPending

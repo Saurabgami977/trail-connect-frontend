@@ -1,6 +1,5 @@
 "use client";
 
-import { Outfit } from "next/font/google";
 import UserSidebar from "./UserSidebar";
 import Backdrop from "./Backdrop";
 import { useSidebar } from "@/context/SidebarContext";
@@ -14,7 +13,6 @@ export default function RootLayout({
 }>) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
-  // Dynamic class for main content margin based on sidebar state
   const mainContentMargin = isMobileOpen
     ? "ml-0"
     : isExpanded || isHovered
@@ -24,18 +22,15 @@ export default function RootLayout({
   return (
     <>
       <div className="min-h-screen xl:flex">
-        {/* Sidebar and Backdrop */}
         <UserSidebar />
         <Backdrop />
-        {/* Main Content Area */}
         <div
           className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
         >
-          {/* Header */}
-          {/* Page Content */}
           <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
             <Header />
             {children}
+            <Footer />
           </div>
         </div>
       </div>

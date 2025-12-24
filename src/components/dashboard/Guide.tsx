@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,8 +93,6 @@ const GuideDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Welcome Banner */}
@@ -492,8 +488,6 @@ const GuideDashboard = () => {
           </Tabs>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

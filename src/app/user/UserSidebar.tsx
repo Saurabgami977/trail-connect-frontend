@@ -5,18 +5,17 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  LayoutDashboardIcon as BoxCubeIcon,
+  Activity,
+  AlertTriangle,
   CalendarIcon as CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   DotSquareIcon as HorizontaLDots,
-  ListIcon,
   Plug as PlugInIcon,
   TableIcon,
   UserCircleIcon,
-  Activity,
-  AlertTriangle,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 type NavItem = {
   name: string;
@@ -25,44 +24,131 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/user/admin",
+const navigation = {
+  guide: {
+    navItems: [
+      {
+        icon: <GridIcon />,
+        name: "Dashboard",
+        path: "/user",
+      },
+      {
+        icon: <CalenderIcon />,
+        name: "Invoices",
+        path: "/user/invoices",
+      },
+      {
+        icon: <UserCircleIcon />,
+        name: "User Profile",
+        path: "/user/profile",
+      },
+      {
+        name: "Subscriptions",
+        icon: <TableIcon />,
+        path: "/user/subscriptions",
+      },
+      {
+        name: "Packages",
+        icon: <TableIcon />,
+        path: "/user/packages",
+      },
+    ],
+    othersItems: [
+      {
+        icon: <PlugInIcon />,
+        name: "Logout",
+        path: "/logout",
+      },
+    ],
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Invoices",
-    path: "/user/admin/invoices",
+  admin: {
+    navItems: [
+      {
+        icon: <GridIcon />,
+        name: "Dashboard",
+        path: "/user",
+      },
+      {
+        icon: <Activity />,
+        name: "Users",
+        subItems: [
+          { name: "All Users", path: "/user/users", pro: false },
+          {
+            name: "Blocked Users",
+            path: "/user/blocked-users",
+            pro: false,
+          },
+          { name: "Guides", path: "/user/guides", pro: false },
+          { name: "Staff", path: "/user/staff", pro: false },
+        ],
+      },
+      {
+        icon: <AlertTriangle />,
+        name: "Guides",
+        subItems: [
+          { name: "All Guides", path: "/user/guides", pro: false },
+          {
+            name: "Verification",
+            path: "/user/guides/verification",
+            pro: false,
+          },
+          { name: "Rejected", path: "/user/guides/rejected", pro: false },
+        ],
+      },
+      {
+        icon: <CalenderIcon />,
+        name: "Invoices",
+        path: "/user/invoices",
+      },
+      {
+        icon: <UserCircleIcon />,
+        name: "User Profile",
+        path: "/user/profile",
+      },
+      {
+        name: "Subscriptions",
+        icon: <TableIcon />,
+        path: "/user/subscriptions",
+      },
+      {
+        name: "Packages",
+        icon: <TableIcon />,
+        path: "/user/packages",
+      },
+    ],
+    othersItems: [
+      {
+        icon: <Activity />,
+        name: "Trekking",
+        subItems: [
+          {
+            name: "Trekking Regions",
+            path: "/user/trekking-regions",
+            pro: false,
+          },
+          {
+            name: "Trekking Routes",
+            path: "/user/trekking-routes",
+            pro: false,
+          },
+        ],
+      },
+      {
+        icon: <PlugInIcon />,
+        name: "Logout",
+        path: "/logout",
+      },
+    ],
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/user/admin/profile",
+  user: {
+    navItems: [],
+    othersItems: [],
   },
-  {
-    name: "Subscriptions",
-    icon: <TableIcon />,
-    path: "/user/admin/subscriptions",
-  },
-  {
-    name: "Packages",
-    icon: <TableIcon />,
-    path: "/user/admin/packages",
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <PlugInIcon />,
-    name: "Logout",
-    path: "/logout",
-  },
-];
+};
 
 const AdminSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { user } = useSelector((state: any) => state.auth);
   const pathname = usePathname();
 
   const renderMenuItems = (
@@ -70,7 +156,7 @@ const AdminSidebar: React.FC = () => {
     menuType: "main" | "others"
   ) => (
     <ul className="flex flex-col gap-4">
-      {navItems.map((nav, index) => (
+      {navItems?.map((nav: NavItem, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
@@ -207,7 +293,10 @@ const AdminSidebar: React.FC = () => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items =
+        navigation[user?.role || "user"][
+          menuType === "main" ? "navItems" : "othersItems"
+        ];
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -312,7 +401,10 @@ const AdminSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(
+                navigation[user?.role || "user"].navItems,
+                "main"
+              )}
             </div>
 
             <div className="">
@@ -329,7 +421,10 @@ const AdminSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(
+                navigation[user?.role || "user"].othersItems,
+                "others"
+              )}
             </div>
           </div>
         </nav>

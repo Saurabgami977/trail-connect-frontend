@@ -5,12 +5,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  LayoutDashboardIcon as BoxCubeIcon,
   CalendarIcon as CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   DotSquareIcon as HorizontaLDots,
-  ListIcon,
   Plug as PlugInIcon,
   TableIcon,
   UserCircleIcon,

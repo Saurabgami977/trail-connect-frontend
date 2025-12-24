@@ -53,8 +53,9 @@ export const getByUserId = async (userId: string) => {
 };
 
 // Patch with id
-export const updateGuide = async (id: string, data: any) => {
-  const response = await AxiosService.patch(`/guides/${id}`, data, {
+export const updateGuide = async (data: any) => {
+  const { _id, ...guideData } = data;
+  const response = await AxiosService.patch(`/guides/${_id}`, guideData, {
     withCredentials: true,
   });
   return response.data;
