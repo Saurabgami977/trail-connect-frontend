@@ -33,6 +33,11 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
     },
+    updateGuideAvailability(state, action: PayloadAction<any>) {
+      if (state.guide) {
+        state.guide.availability = action.payload;
+      }
+    },
   },
 });
 

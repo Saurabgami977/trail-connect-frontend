@@ -7,10 +7,15 @@ import { useSidebar } from "@/context/SidebarContext";
 import {
   Activity,
   AlertTriangle,
+  BookAIcon,
+  Bookmark,
   CalendarIcon as CalenderIcon,
   ChevronDownIcon,
+  CircleDollarSignIcon,
   GridIcon,
   DotSquareIcon as HorizontaLDots,
+  MessageCircle,
+  PenIcon,
   Plug as PlugInIcon,
   TableIcon,
   UserCircleIcon,
@@ -33,14 +38,24 @@ const navigation = {
         path: "/user",
       },
       {
-        icon: <CalenderIcon />,
-        name: "Invoices",
-        path: "/user/invoices",
+        icon: <MessageCircle />,
+        name: "Messages",
+        path: "/user/messages",
       },
       {
-        icon: <UserCircleIcon />,
-        name: "User Profile",
-        path: "/user/profile",
+        name: "My Bookings",
+        icon: <BookAIcon />,
+        path: "/user/my-bookings",
+      },
+      {
+        name: "My Reviews",
+        icon: <PenIcon />,
+        path: "/user/my-reviews",
+      },
+      {
+        icon: <CircleDollarSignIcon />,
+        name: "Invoices",
+        path: "/user/invoices",
       },
       {
         name: "Subscriptions",
@@ -54,6 +69,11 @@ const navigation = {
       },
     ],
     othersItems: [
+      {
+        icon: <UserCircleIcon />,
+        name: "User Profile",
+        path: "/user/profile",
+      },
       {
         icon: <PlugInIcon />,
         name: "Logout",
@@ -69,18 +89,14 @@ const navigation = {
         path: "/user",
       },
       {
+        icon: <MessageCircle />,
+        name: "Messages",
+        path: "/user/messages",
+      },
+      {
         icon: <Activity />,
         name: "Users",
-        subItems: [
-          { name: "All Users", path: "/user/users", pro: false },
-          {
-            name: "Blocked Users",
-            path: "/user/blocked-users",
-            pro: false,
-          },
-          { name: "Guides", path: "/user/guides", pro: false },
-          { name: "Staff", path: "/user/staff", pro: false },
-        ],
+        path: "/user/users",
       },
       {
         icon: <AlertTriangle />,
@@ -97,13 +113,18 @@ const navigation = {
       },
       {
         icon: <CalenderIcon />,
-        name: "Invoices",
-        path: "/user/invoices",
+        name: "Bookings",
+        path: "/user/bookings",
       },
       {
-        icon: <UserCircleIcon />,
-        name: "User Profile",
-        path: "/user/profile",
+        name: "Reviews",
+        icon: <PenIcon />,
+        path: "/user/reviews",
+      },
+      {
+        icon: <CircleDollarSignIcon />,
+        name: "Payments",
+        path: "/user/payments",
       },
       {
         name: "Subscriptions",
@@ -115,8 +136,6 @@ const navigation = {
         icon: <TableIcon />,
         path: "/user/packages",
       },
-    ],
-    othersItems: [
       {
         icon: <Activity />,
         name: "Trekking",
@@ -133,6 +152,13 @@ const navigation = {
           },
         ],
       },
+    ],
+    othersItems: [
+      {
+        icon: <UserCircleIcon />,
+        name: "User Profile",
+        path: "/user/profile",
+      },
       {
         icon: <PlugInIcon />,
         name: "Logout",
@@ -141,8 +167,71 @@ const navigation = {
     ],
   },
   user: {
-    navItems: [],
-    othersItems: [],
+    navItems: [
+      {
+        icon: <GridIcon />,
+        name: "Dashboard",
+        path: "/user",
+      },
+      {
+        icon: <MessageCircle />,
+        name: "Messages",
+        path: "/user/messages",
+      },
+      {
+        icon: <CircleDollarSignIcon />,
+        name: "Invoices",
+        path: "/user/invoices",
+      },
+      {
+        name: "My Bookings",
+        icon: <BookAIcon />,
+        path: "/user/my-bookings",
+      },
+      {
+        name: "My Reviews",
+        icon: <PenIcon />,
+        path: "/user/my-reviews",
+      },
+      {
+        name: "Saved",
+        icon: <Bookmark />,
+        subItems: [
+          {
+            name: "Saved Trips",
+            icon: <Bookmark />,
+            path: "/user/saved-trips",
+          },
+          {
+            name: "Saved Guides",
+            icon: <Bookmark />,
+            path: "/user/saved-guides",
+          },
+          {
+            name: "Saved Locations",
+            icon: <Bookmark />,
+            path: "/user/saved-locations",
+          },
+          {
+            name: "Saved Experiences",
+            icon: <Bookmark />,
+            path: "/user/saved-experiences",
+          },
+        ],
+      },
+    ],
+    othersItems: [
+      {
+        icon: <UserCircleIcon />,
+        name: "User Profile",
+        path: "/user/profile",
+      },
+      {
+        icon: <PlugInIcon />,
+        name: "Logout",
+        path: "/logout",
+      },
+    ],
   },
 };
 

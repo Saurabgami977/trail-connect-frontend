@@ -25,6 +25,8 @@ import {
   Calendar,
 } from "lucide-react";
 import { MOCK_GUIDES, TREKKING_REGIONS, LANGUAGES } from "@/lib/constants";
+import { useQuery } from "@tanstack/react-query";
+import { getVerifiedGuides } from "@/api/routes/guide";
 
 const guideImages = [
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
@@ -37,6 +39,11 @@ const GuidesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+
+  const { data: guides } = useQuery({
+    queryKey: ["verifiedGuides"],
+    queryFn: getVerifiedGuides,
+  });
 
   const filteredGuides = MOCK_GUIDES.filter((guide) => {
     const matchesSearch =
@@ -144,18 +151,21 @@ const GuidesPage = () => {
 
           {/* Guides Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredGuides.map((guide, index) => (
+            {guides?.map((guide, index) => (
               <Card
-                key={guide.id}
+                key={guide._id}
                 className="group overflow-hidden hover:-translate-y-1"
               >
                 <div className="relative aspect-square overflow-hidden">
                   <img
-                    src={guideImages[index % guideImages.length]}
+                    src={
+                      process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                      guide?.user?.avatar
+                    }
                     alt={guide.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  {guide.verified && (
+                  {guide.verificationStatus && (
                     <div className="absolute top-3 right-3">
                       <Badge variant="verified" className="gap-1">
                         <ShieldCheck className="h-3 w-3" />
@@ -165,46 +175,52 @@ const GuidesPage = () => {
                   )}
                   <div className="absolute bottom-3 left-3">
                     <Badge variant="region">
-                      {guide.experience} years exp.
+                      {guide.yearsOfExperience} years exp.
                     </Badge>
                   </div>
                 </div>
 
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-foreground">{guide.name}</h3>
+                    <h3 className="font-bold text-foreground">
+                      {guide.user?.firstName + " " + guide.user?.lastName}
+                    </h3>
                     <div className="flex items-center gap-1 text-sm">
                       <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      <span className="font-medium">{guide.rating}</span>
+                      <span className="font-medium">{guide.avgRating}</span>
                       <span className="text-muted-foreground">
-                        ({guide.reviewCount})
+                        ({guide?.reviewCount})
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
                     <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="truncate">{guide.regions.join(", ")}</span>
+                    <span className="truncate">
+                      {guide?.expertiseRegions
+                        ?.map((region) => region.name)
+                        .join(", ")}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
                     <Languages className="h-3.5 w-3.5 flex-shrink-0" />
                     <span className="truncate">
-                      {guide.languages.join(", ")}
+                      {guide.user.languages.join(", ")}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xl font-bold text-primary">
-                        ${guide.dailyRate}
+                        ${guide.pricing.dailyRate}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         /day
                       </span>
                     </div>
                     <Button size="sm" asChild>
-                      <Link href={`/guides/${guide.id}`}>View Profile</Link>
+                      <Link href={`/guides/${guide._id}`}>View Profile</Link>
                     </Button>
                   </div>
                 </CardContent>

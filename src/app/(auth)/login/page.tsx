@@ -28,6 +28,7 @@ const LoginPage = () => {
   const router = useRouter();
 
   const { mutate: loginFunc, isPending } = useMutation({
+    mutationKey: ["login"],
     mutationFn: signin,
     onSuccess: (data) => {
       router.push("/");
@@ -56,8 +57,6 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="pt-24 pb-16 min-h-[calc(100vh-200px)] flex items-center">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
@@ -168,8 +167,6 @@ const LoginPage = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

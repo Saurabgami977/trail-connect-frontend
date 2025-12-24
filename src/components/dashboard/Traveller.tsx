@@ -28,6 +28,7 @@ import {
   Plane,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSelector } from "react-redux";
 
 const mockTrips = [
   {
@@ -98,6 +99,7 @@ const statusConfig = {
 
 const TouristDashboard = () => {
   const [activeTab, setActiveTab] = useState("trips");
+  const { user } = useSelector((state: any) => state.auth);
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +110,7 @@ const TouristDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                  Welcome back, Emma!
+                  Welcome back, {user?.firstName}!
                 </h1>
                 <p className="text-primary-foreground/70">
                   Manage your treks, saved guides, and travel documents.

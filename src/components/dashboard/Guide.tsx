@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,12 @@ import {
   Edit,
   Save,
 } from "lucide-react";
-import { EXTRA_SERVICES, TREKKING_REGIONS } from "@/lib/constants";
+import { EXTRA_SERVICES } from "@/lib/constants";
+import { useSelector } from "react-redux";
+import { useMutation } from "@tanstack/react-query";
+import { updateAvailability } from "@/api/routes/guide";
+import { store } from "@/store/store";
+import { toast } from "sonner";
 
 const mockBookings = [
   {
@@ -69,12 +74,31 @@ const mockBookings = [
 ];
 
 const GuideDashboard = () => {
+  const { user, guide } = useSelector((state: any) => state.auth);
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
   const [dailyRate, setDailyRate] = useState("45");
   const [activeServices, setActiveServices] = useState<string[]>([
     "porter",
     "tims",
   ]);
+
+  useEffect(() => {
+    if (guide && guide.availability) {
+      const unavailableDates = guide.availability
+        .filter((slot: any) => slot.status === "unavailable")
+        .flatMap((slot: any) => {
+          const dates = [];
+          const currentDate = new Date(slot.startDate);
+          const endDate = new Date(slot.endDate);
+          while (currentDate <= endDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+          return dates;
+        });
+      setBlockedDates(unavailableDates);
+    }
+  }, [guide]);
 
   const toggleService = (serviceId: string) => {
     setActiveServices((prev) =>
@@ -89,6 +113,40 @@ const GuideDashboard = () => {
     monthlyEarnings: 2340,
     rating: 4.9,
     completedTreks: 82,
+  };
+
+  const { mutate: mutateAvailability, isPending: isAvailabilityUpdating } =
+    useMutation({
+      mutationFn: (
+        availability: {
+          startDate: Date;
+          endDate: Date;
+          status: string;
+        }[]
+      ) => updateAvailability(guide._id, availability),
+      onSuccess: (data) => {
+        store.dispatch({
+          type: "guide/updateAvailability",
+          payload: data.availability,
+        });
+        toast.success("Availability updated successfully!");
+      },
+    });
+
+  const handleUnavailableDatesSave = () => {
+    // Logic to save blocked dates to the backend or state management
+    console.log("Blocked Dates Saved:", blockedDates);
+
+    // convert in the form of from - to objects
+    const blockedDateRanges = blockedDates.map((date) => {
+      return {
+        startDate: date,
+        endDate: date,
+        status: "unavailable",
+      };
+    });
+
+    mutateAvailability(blockedDateRanges);
   };
 
   return (
@@ -109,14 +167,14 @@ const GuideDashboard = () => {
                   </Badge>
                 </div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                  Welcome back, Tenzing!
+                  Welcome back, {user?.firstName}!
                 </h1>
                 <p className="text-primary-foreground/70">
                   Manage your profile, calendar, and bookings all in one place.
                 </p>
               </div>
               <Button variant="heroOutline" asChild>
-                <Link href="/guides/1">View Public Profile</Link>
+                <Link href={`/guides/${guide?._id}`}>View Public Profile</Link>
               </Button>
             </div>
           </div>
@@ -208,10 +266,6 @@ const GuideDashboard = () => {
               <TabsTrigger value="services" className="gap-2 py-2">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Services</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="gap-2 py-2">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Profile</span>
               </TabsTrigger>
             </TabsList>
 
@@ -331,8 +385,9 @@ const GuideDashboard = () => {
                         </p>
                       )}
                       <Button
-                        className="mt-4"
-                        disabled={blockedDates.length === 0}
+                        className="mt-4 cursor-pointer"
+                        disabled={isAvailabilityUpdating}
+                        onClick={handleUnavailableDatesSave}
                       >
                         <Save className="h-4 w-4 mr-2" />
                         Save Changes
@@ -348,9 +403,7 @@ const GuideDashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Pricing Settings</CardTitle>
-                  <CardDescription>
-                    Set your daily rate and seasonal pricing.
-                  </CardDescription>
+                  <CardDescription>Set your daily rate.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -365,20 +418,6 @@ const GuideDashboard = () => {
                           type="number"
                           value={dailyRate}
                           onChange={(e) => setDailyRate(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="peakRate">
-                        Peak Season Rate (Oct-Nov, Mar-May)
-                      </Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="peakRate"
-                          type="number"
-                          placeholder="55"
                           className="pl-10"
                         />
                       </div>
@@ -426,61 +465,6 @@ const GuideDashboard = () => {
                   <Button className="mt-6">
                     <Save className="h-4 w-4 mr-2" />
                     Save Services
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Profile Tab */}
-            <TabsContent value="profile">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Settings</CardTitle>
-                  <CardDescription>
-                    Update your public profile information.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <User className="h-10 w-10 text-primary" />
-                    </div>
-                    <Button variant="outline">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Change Photo
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>First Name</Label>
-                      <Input defaultValue="Tenzing" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Last Name</Label>
-                      <Input defaultValue="Sherpa" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input defaultValue="tenzing@example.com" type="email" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Phone</Label>
-                      <Input defaultValue="+977 98 1234 5678" type="tel" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Bio</Label>
-                    <textarea
-                      className="w-full min-h-[100px] px-3 py-2 rounded-lg border bg-background resize-none"
-                      defaultValue="Born and raised in the shadows of Everest, I've been guiding treks for over 12 years..."
-                    />
-                  </div>
-
-                  <Button>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Profile
                   </Button>
                 </CardContent>
               </Card>

@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,22 +24,19 @@ import {
   FileText,
 } from "lucide-react";
 import { MOCK_GUIDES, EXTRA_SERVICES } from "@/lib/constants";
-
-const guideImages = [
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&q=80",
-];
+import { useQuery } from "@tanstack/react-query";
+import { getById } from "@/api/routes/guide";
 
 const GuideProfile = () => {
   const { id } = useParams();
-  const guideIndex = MOCK_GUIDES.findIndex((g) => g.id === id);
-  const guide = guideIndex !== -1 ? MOCK_GUIDES[guideIndex] : MOCK_GUIDES[0];
-  const guideImage = guideImages[guideIndex !== -1 ? guideIndex : 0];
 
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  const { data: guideData } = useQuery({
+    queryKey: ["guideDetails", id],
+    queryFn: () => getById(id),
+  });
 
   const serviceIcons: Record<string, React.ElementType> = {
     "domestic-flight": Plane,
@@ -59,7 +54,7 @@ const GuideProfile = () => {
   };
 
   const totalDays = selectedDates.length;
-  const basePrice = totalDays * guide.dailyRate;
+  const basePrice = totalDays * guideData?.pricing?.dailyRate;
   const servicePrice = selectedServices.length * 25; // Placeholder pricing
   const totalPrice = basePrice + servicePrice;
 
@@ -85,11 +80,14 @@ const GuideProfile = () => {
                   <div className="flex flex-col sm:flex-row gap-6">
                     <div className="relative flex-shrink-0">
                       <img
-                        src={guideImage}
-                        alt={guide.name}
+                        src={
+                          process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                          guideData?.user?.avatar
+                        }
+                        alt={guideData?.user?.firstName}
                         className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover"
                       />
-                      {guide.verified && (
+                      {guideData?.verified && (
                         <div className="absolute -bottom-2 -right-2 bg-emerald-600 text-primary-foreground p-2 rounded-full shadow-lg">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
@@ -100,24 +98,25 @@ const GuideProfile = () => {
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
                         <div>
                           <h1 className="text-2xl font-bold text-foreground mb-1">
-                            {guide.name}
+                            {guideData?.user?.firstName}{" "}
+                            {guideData?.user?.lastName}
                           </h1>
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="verified">Licensed Guide</Badge>
                             <div className="flex items-center gap-1 text-sm">
                               <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                               <span className="font-medium">
-                                {guide.rating}
+                                {guideData?.avgRating}
                               </span>
                               <span className="text-muted-foreground">
-                                ({guide.reviewCount} reviews)
+                                ({guideData?.reviewCount} reviews)
                               </span>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-2xl font-bold text-primary">
-                            ${guide.dailyRate}
+                            ${guideData?.pricing?.dailyRate}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             per day
@@ -128,15 +127,21 @@ const GuideProfile = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="h-4 w-4" />
-                          <span>{guide.experience} years experience</span>
+                          <span>
+                            {guideData?.yearsOfExperience} years experience
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          <span>{guide.regions.length} regions</span>
+                          <span>
+                            {guideData?.expertiseRegions?.length} regions
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Languages className="h-4 w-4" />
-                          <span>{guide.languages.length} languages</span>
+                          <span>
+                            {guideData?.user?.languages?.length} languages
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -151,7 +156,9 @@ const GuideProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground leading-relaxed">
-                    {guide.bio}
+                    {guideData?.user?.bio} <br />
+                    <div className="mb-10"></div>
+                    {guideData?.bio}
                   </p>
                 </CardContent>
               </Card>
@@ -163,14 +170,14 @@ const GuideProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {guide.regions.map((region) => (
+                    {guideData?.expertiseRegions?.map((region) => (
                       <Badge
-                        key={region}
+                        key={region._id}
                         variant="region"
                         className="text-sm py-1.5 px-3"
                       >
                         <MapPin className="h-3.5 w-3.5 mr-1" />
-                        {region}
+                        {region.name}
                       </Badge>
                     ))}
                   </div>
@@ -184,7 +191,7 @@ const GuideProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {guide.languages.map((lang) => (
+                    {guideData?.user?.languages.map((lang) => (
                       <Badge
                         key={lang}
                         variant="secondary"
@@ -294,7 +301,7 @@ const GuideProfile = () => {
                     <div className="border-t pt-4 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          ${guide.dailyRate} × {totalDays} days
+                          ${guideData?.pricing.dailyRate} × {totalDays} days
                         </span>
                         <span>${basePrice}</span>
                       </div>

@@ -7,10 +7,24 @@ export const getAll = async () => {
   return response.data;
 };
 
-export const getVerified = async () => {
+export const getVerifiedGuides = async () => {
   const response = await AxiosService.get("/guides/verified", {
     withCredentials: true,
   });
+  return response.data;
+};
+
+export const updateAvailability = async (
+  id: string,
+  availability: { startDate: Date; endDate: Date; status: string }[]
+) => {
+  const response = await AxiosService.patch(
+    `/guides/${id}/availability`,
+    { availability },
+    {
+      withCredentials: true,
+    }
+  );
   return response.data;
 };
 
