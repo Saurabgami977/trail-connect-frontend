@@ -27,7 +27,7 @@ export default function RootLayout({
         <div
           className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
         >
-          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-4">
             <Header />
             {children}
             <Footer />
