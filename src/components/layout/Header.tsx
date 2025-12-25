@@ -45,13 +45,13 @@ const Header = () => {
               Trekking Regions
             </Link>
             <Link
-              href="/user/treks"
+              href="/treks"
               className="hover:opacity-80 transition-opacity font-medium"
             >
               Treks
             </Link>
             <Link
-              href="/user/create-trek"
+              href="/create-trek"
               className="hover:opacity-80 transition-opacity font-medium"
             >
               Create Trek
@@ -115,14 +115,14 @@ const Header = () => {
                 Trekking Regions
               </Link>
               <Link
-                href="/user/treks"
+                href="/treks"
                 className="px-4 py-2 rounded-lg hover:bg-muted transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Treks
               </Link>
               <Link
-                href="/user/create-trek"
+                href="/create-trek"
                 className="px-4 py-2 rounded-lg hover:bg-muted transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

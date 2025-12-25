@@ -1,11 +1,8 @@
-// app/treks/[id]/join/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,11 +31,9 @@ import {
   MapPin,
   Clock,
   Shield,
-  FileText,
   User,
   Mail,
   Phone,
-  Globe,
   CreditCard,
   Building,
   Lock,
@@ -46,18 +41,15 @@ import {
   TrendingDown,
   Calculator,
   Eye,
-  EyeOff,
-  ChevronDown,
-  ChevronUp,
   MessageCircle,
   Star,
   ThumbsUp,
-  Heart,
   Sparkles,
   Mountain,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { LoginModal } from "@/components/Login Modal/LoginModal";
 
 // Mock trek data
 const MOCK_TREK = {
@@ -209,6 +201,7 @@ export default function JoinTrekPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <LoginModal redirectUrl={`/treks/${id}/join`} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Progress Bar */}

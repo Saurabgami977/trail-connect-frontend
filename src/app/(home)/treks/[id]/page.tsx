@@ -1,9 +1,8 @@
 // app/treks/[id]/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ import {
   Mountain,
   Clock,
   UserPlus,
-  ChevronRight,
   Star,
   CheckCircle,
   AlertCircle,
@@ -43,21 +41,16 @@ import {
   Calculator,
   UsersRound,
   TrendingDown,
-  TrendingUp,
   Eye,
   Lock,
   Globe,
   MessageCircle,
   Heart,
-  CalendarDays,
   Map,
   Hotel,
-  ChefHat,
   Bus,
   Shield,
   FileText,
-  Phone,
-  Mail,
   ArrowLeft,
   MoreVertical,
   Copy,
@@ -67,16 +60,10 @@ import {
   MessageCircleCode,
   Instagram,
   Bell,
-  ThumbsUp,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type {
-  Trek,
-  Day,
-  Participant,
-  GuideAssignment,
-} from "@/types/create-trek";
+import type { Trek } from "@/types/create-trek";
 
 // Mock detailed trek data
 const MOCK_TREK_DETAILS: Trek = {

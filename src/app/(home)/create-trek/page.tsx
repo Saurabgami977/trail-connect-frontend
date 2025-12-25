@@ -82,6 +82,7 @@ import type {
   GuideRequest,
   CostBreakdown,
 } from "@/types/create-trek";
+import { LoginModal } from "@/components/Login Modal/LoginModal";
 
 // Mock data for services
 const MANDATORY_SERVICES: Service[] = [
@@ -494,7 +495,7 @@ export default function CreateTrekPage() {
   return (
     <div className="min-h-screen bg-background pt-20">
       <Header />
-
+      <LoginModal />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
