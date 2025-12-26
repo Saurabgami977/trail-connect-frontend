@@ -52,6 +52,7 @@ import {
   TrendingDown,
   Droplets,
   Eye,
+  Hotel,
 } from "lucide-react";
 import {
   LineChart,
@@ -519,10 +520,6 @@ const difficultyRadarData = [
   { aspect: "Remoteness", value: 75 },
 ];
 
-// app/treks/[slug]/page.tsx (continued from where you left off)
-
-// ... (keep all the imports and data from above)
-
 export default function TrekDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -532,7 +529,6 @@ export default function TrekDetailPage() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageGallery, setShowImageGallery] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const trek = getTrekData(slug);
 
@@ -569,34 +565,6 @@ export default function TrekDetailPage() {
     return baseCost + servicesCost;
   };
 
-  const handleBookNow = () => {
-    setIsLoading(true);
-    // Simulate booking process
-    setTimeout(() => {
-      alert(
-        `Booking initiated for ${trek.name}! You will be redirected to the booking form.`
-      );
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: trek.name,
-          text: trek.description,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log("Error sharing:", err);
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
-  };
-
   const tabs = [
     { id: "overview", label: "Overview", icon: Info },
     { id: "itinerary", label: "Detailed Itinerary", icon: Map },
@@ -606,8 +574,33 @@ export default function TrekDetailPage() {
     { id: "reviews", label: "Reviews", icon: Star },
   ];
 
+  const [isLoading, setIsLoading] = useState(false);
+  const handleBookNow = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push("/booking?trek=" + trek.slug);
+    }, 1500);
+  };
+  const handleShare = () => {
+    const shareData = {
+      title: trek.name,
+      text: `Check out this trek: ${trek.name}`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      navigator
+        .share(shareData)
+        .catch((error) => console.log("Error sharing", error));
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("Link copied to clipboard!");
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white mt-20">
       {/* Hero Section with Parallax Effect */}
       <div className="relative h-[600px] overflow-hidden">
         <div
@@ -655,64 +648,74 @@ export default function TrekDetailPage() {
 
         {/* Hero Content */}
         <div className="absolute inset-0 flex items-end">
-          <div className="max-w-7xl mx-auto px-4 pb-16 w-full">
-            <div className="flex flex-wrap gap-3 mb-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12 lg:pb-16 w-full">
+            {/* Badges - Stack on mobile, row on larger screens */}
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
               <span
                 className={`${getDifficultyColor(
                   trek.difficulty
-                )} text-white px-5 py-2 rounded-full font-semibold capitalize shadow-lg backdrop-blur-sm transform hover:scale-105 transition-transform`}
+                )} text-white px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-full font-semibold capitalize shadow-lg backdrop-blur-sm transform hover:scale-105 transition-transform text-xs sm:text-sm lg:text-base`}
               >
                 {trek.difficulty}
               </span>
-              <span className="bg-white/20 backdrop-blur-md text-white px-5 py-2 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:bg-white/30 transition-colors">
-                <MapPin className="h-4 w-4" />
-                {trek.region.name} Region
+              <span className="bg-white/20 backdrop-blur-md text-white px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-full font-semibold flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-white/30 transition-colors text-xs sm:text-sm lg:text-base">
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="whitespace-nowrap">
+                  {trek.region.name} Region
+                </span>
               </span>
-              <span className="bg-white/20 backdrop-blur-md text-white px-5 py-2 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:bg-white/30 transition-colors">
-                <Star className="h-4 w-4 fill-current" />
-                {trek.rating}/5 ({trek.reviewCount} reviews)
+              <span className="bg-white/20 backdrop-blur-md text-white px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-full font-semibold flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-white/30 transition-colors text-xs sm:text-sm lg:text-base">
+                <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-current" />
+                <span className="whitespace-nowrap">
+                  {trek.rating}/5 ({trek.reviewCount})
+                </span>
               </span>
-              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full font-semibold flex items-center gap-2 shadow-lg hover:bg-emerald-500 transition-colors">
-                <TrendingUp className="h-4 w-4" />
-                {trek.successRate}% Success Rate
+              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 rounded-full font-semibold flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-emerald-500 transition-colors text-xs sm:text-sm lg:text-base">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="whitespace-nowrap">
+                  {trek.successRate}% Success
+                </span>
               </span>
             </div>
 
-            <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl leading-tight">
+            {/* Title - Responsive font sizes */}
+            <h1 className="font-bold text-white mb-3 sm:mb-4 drop-shadow-2xl leading-tight text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
               {trek.name}
             </h1>
-            <p className="text-2xl text-gray-200 max-w-4xl drop-shadow-lg mb-8">
+
+            {/* Description - Hide on very small screens, show on sm+ */}
+            <p className="text-gray-200 max-w-4xl drop-shadow-lg mb-6 sm:mb-8 hidden xs:block text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl">
               {trek.description}
             </p>
 
-            {/* Quick Action Buttons */}
-            <div className="flex flex-wrap gap-4">
+            {/* Quick Action Buttons - Stack on mobile, row on larger screens */}
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <button
                 onClick={handleBookNow}
                 disabled={isLoading}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
                     Processing...
                   </>
                 ) : (
                   <>
                     Book This Trek
-                    <ArrowRight className="h-5 w-5" />
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                   </>
                 )}
               </button>
-              <button className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-8 py-4 rounded-xl font-semibold shadow-xl transition-all border border-white/30 hover:border-white/50">
+              <button className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-xl transition-all border border-white/30 hover:border-white/50 w-full sm:w-auto text-center">
                 Request Custom Quote
               </button>
               <button
                 onClick={() => setShowImageGallery(true)}
-                className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-6 py-4 rounded-xl font-semibold shadow-xl transition-all border border-white/30 hover:border-white/50 flex items-center gap-2"
+                className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold shadow-xl transition-all border border-white/30 hover:border-white/50 flex items-center justify-center gap-2 w-full sm:w-auto"
               >
-                <Camera className="h-5 w-5" />
-                View Gallery
+                <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>View Gallery</span>
               </button>
             </div>
           </div>
@@ -720,7 +723,7 @@ export default function TrekDetailPage() {
       </div>
 
       {/* Sticky Stats Bar */}
-      <div className="bg-white border-b sticky top-0 z-40 shadow-md backdrop-blur-sm bg-white/95">
+      <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 py-4">
             <div className="text-center group cursor-pointer">
@@ -765,853 +768,1298 @@ export default function TrekDetailPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content Area */}
-          <div className="lg:w-2/3">
-            {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-lg border overflow-hidden mb-8">
-              <div className="border-b">
-                <nav className="flex overflow-x-auto">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setSelectedTab(tab.id)}
-                        className={`flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                          selectedTab === tab.id
-                            ? "border-emerald-600 text-emerald-600 bg-emerald-50/50"
-                            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-8">
-                {selectedTab === "overview" && (
-                  <div className="space-y-8">
-                    <div>
-                      <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                        Trek Overview
-                      </h2>
-                      <p className="text-gray-700 leading-relaxed text-lg mb-6">
-                        {trek.longDescription}
-                      </p>
-
-                      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-6 mb-8 border border-emerald-100">
-                        <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900">
-                          <Mountain className="h-6 w-6 text-emerald-600" />
-                          Key Highlights
-                        </h3>
-                        <div className="grid md:grid-cols-2 gap-3">
-                          {trek.highlights.map((highlight, index) => (
-                            <div
-                              key={index}
-                              className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors"
-                            >
-                              <CheckCircle className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700">{highlight}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Charts Section */}
-                      <div className="grid md:grid-cols-2 gap-8 mb-8">
-                        <div className="bg-white rounded-xl p-6 border shadow-sm">
-                          <h4 className="font-bold mb-4 flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-emerald-600" />
-                            Altitude Profile
-                          </h4>
-                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={altitudeChartData}>
-                                <CartesianGrid
-                                  strokeDasharray="3 3"
-                                  stroke="#e5e7eb"
-                                />
-                                <XAxis dataKey="location" />
-                                <YAxis
-                                  label={{
-                                    value: "Meters",
-                                    angle: -90,
-                                    position: "insideLeft",
-                                  }}
-                                />
-                                <Tooltip />
-                                <Area
-                                  type="monotone"
-                                  dataKey="altitude"
-                                  stroke="#059669"
-                                  fill="#10b981"
-                                  fillOpacity={0.3}
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl p-6 border shadow-sm">
-                          <h4 className="font-bold mb-4 flex items-center gap-2">
-                            <Thermometer className="h-5 w-5 text-emerald-600" />
-                            Monthly Temperatures
-                          </h4>
-                          <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={temperatureData}>
-                                <CartesianGrid
-                                  strokeDasharray="3 3"
-                                  stroke="#e5e7eb"
-                                />
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Line
-                                  type="monotone"
-                                  dataKey="high"
-                                  stroke="#059669"
-                                  name="High Temp (°C)"
-                                />
-                                <Line
-                                  type="monotone"
-                                  dataKey="low"
-                                  stroke="#3b82f6"
-                                  name="Low Temp (°C)"
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Difficulty Radar Chart */}
-                      <div className="bg-white rounded-xl p-6 border shadow-sm">
-                        <h4 className="font-bold mb-4 flex items-center gap-2">
-                          <Activity className="h-5 w-5 text-emerald-600" />
-                          Difficulty Analysis
-                        </h4>
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart data={difficultyRadarData}>
-                              <PolarGrid />
-                              <PolarAngleAxis dataKey="aspect" />
-                              <PolarRadiusAxis />
-                              <Radar
-                                name="Difficulty"
-                                dataKey="value"
-                                stroke="#059669"
-                                fill="#10b981"
-                                fillOpacity={0.6}
-                              />
-                            </RadarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedTab === "itinerary" && (
-                  <div className="space-y-6">
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                      Detailed Itinerary
-                    </h2>
-                    <div className="relative">
-                      {/* Vertical Timeline Line */}
-                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 to-blue-500"></div>
-
-                      {trek.itinerary.map((day, index) => (
-                        <div key={day.day} className="relative mb-8 last:mb-0">
-                          {/* Timeline Dot */}
-                          <div className="absolute left-4 w-4 h-4 rounded-full bg-emerald-600 border-4 border-white shadow-lg"></div>
-
-                          <div className="ml-12 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-                            <div className="p-6">
-                              <div className="flex justify-between items-start mb-4">
-                                <div>
-                                  <div className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-semibold mb-2">
-                                    Day {day.day}
-                                  </div>
-                                  <h3 className="text-xl font-bold text-gray-900">
-                                    {day.title}
-                                  </h3>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm text-gray-600">
-                                    Altitude
-                                  </div>
-                                  <div className="text-lg font-bold text-gray-900">
-                                    {day.altitude.toLocaleString()} m
-                                  </div>
-                                </div>
-                              </div>
-
-                              <p className="text-gray-700 mb-4">
-                                {day.description}
-                              </p>
-
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-lg">
-                                  <Clock className="h-4 w-4 text-gray-600" />
-                                  <span className="font-medium">
-                                    {day.duration}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-lg">
-                                  <Navigation className="h-4 w-4 text-gray-600" />
-                                  <span className="font-medium">
-                                    {day.distance}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-lg">
-                                  <Bed className="h-4 w-4 text-gray-600" />
-                                  <span className="font-medium">
-                                    {day.overnight}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded-lg">
-                                  <Utensils className="h-4 w-4 text-gray-600" />
-                                  <span className="font-medium">
-                                    {day.meals.length} meals
-                                  </span>
-                                </div>
-                              </div>
-
-                              {day.highlights && day.highlights.length > 0 && (
-                                <div>
-                                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                                    <Award className="h-4 w-4 text-emerald-600" />
-                                    Highlights
-                                  </h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {day.highlights.map((highlight, i) => (
-                                      <span
-                                        key={i}
-                                        className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium"
-                                      >
-                                        {highlight}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedTab === "costs" && (
-                  <div className="space-y-8">
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                      Cost Breakdown & Services
-                    </h2>
-
-                    {/* Cost Breakdown */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border border-emerald-100">
-                      <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
-                        <DollarSign className="h-6 w-6 text-emerald-600" />
-                        Base Cost Breakdown
-                      </h3>
-
-                      <div className="space-y-4">
-                        {Object.entries({
-                          "Guide Services":
-                            trek.costBreakdown.guidePerDay * trek.duration,
-                          Accommodation:
-                            trek.costBreakdown.accommodationPerDay *
-                            trek.duration,
-                          Meals: trek.costBreakdown.mealsPerDay * trek.duration,
-                          "Permits & Fees": trek.costBreakdown.permitsPerPerson,
-                          Transportation: trek.costBreakdown.transportPerPerson,
-                        }).map(([item, cost], index) => (
-                          <div
-                            key={index}
-                            className="flex justify-between items-center py-3 border-b border-gray-200 last:border-0"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <DollarSign className="h-4 w-4 text-emerald-600" />
-                              </div>
-                              <span className="font-medium text-gray-700">
-                                {item}
-                              </span>
-                            </div>
-                            <span className="font-bold text-gray-900">
-                              ${cost}
-                            </span>
-                          </div>
-                        ))}
-
-                        <div className="pt-4 mt-4 border-t border-gray-300">
-                          <div className="flex justify-between text-lg font-bold">
-                            <span>Base Total</span>
-                            <span className="text-emerald-600">
-                              $
-                              {calculateTotalCost() -
-                                selectedServices.reduce((sum, serviceId) => {
-                                  const service = trek.extraServices?.find(
-                                    (s) => s.name === serviceId
-                                  );
-                                  return sum + (service?.costPerPerson || 0);
-                                }, 0)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Extra Services */}
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm">
-                      <h3 className="text-2xl font-bold mb-6 text-gray-900">
-                        Additional Services
-                      </h3>
-
-                      <div className="space-y-4">
-                        {trek.extraServices.map((service, index) => (
-                          <div
-                            key={index}
-                            className={`border rounded-xl p-5 transition-all hover:shadow-md ${
-                              selectedServices.includes(service.name)
-                                ? "border-emerald-500 bg-emerald-50"
-                                : "border-gray-200 hover:border-emerald-300"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-start gap-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedServices.includes(
-                                      service.name
-                                    )}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedServices([
-                                          ...selectedServices,
-                                          service.name,
-                                        ]);
-                                      } else {
-                                        setSelectedServices(
-                                          selectedServices.filter(
-                                            (s) => s !== service.name
-                                          )
-                                        );
-                                      }
-                                    }}
-                                    className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 mt-1"
-                                  />
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <h4 className="font-bold text-gray-900">
-                                        {service.name}
-                                      </h4>
-                                      {service.isOptional ? (
-                                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                                          Optional
-                                        </span>
-                                      ) : (
-                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                                          Required
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="text-gray-600 mt-1">
-                                      {service.description}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right ml-4">
-                                <div className="text-xl font-bold text-emerald-600">
-                                  ${service.costPerPerson}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  per person
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-blue-900">
-                            <strong>Note:</strong> All prices are in USD and
-                            subject to change. Prices include all government
-                            taxes and service charges.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedTab === "requirements" && (
-                  <div className="space-y-8">
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                      Requirements & Essential Gear
-                    </h2>
-
-                    {/* Fitness Requirements */}
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
-                      <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900">
-                        <Activity className="h-6 w-6 text-amber-600" />
-                        Fitness Requirements
-                      </h3>
-                      <div className="prose prose-lg max-w-none">
-                        <p className="text-gray-700 leading-relaxed">
-                          {trek.requirements.fitnessLevel}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Gear Checklist */}
-                    <div className="bg-white rounded-2xl p-6 border shadow-sm">
-                      <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
-                        <Backpack className="h-6 w-6 text-emerald-600" />
-                        Essential Gear Checklist
-                      </h3>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {trek.requirements.gearChecklist.map((item, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
-                          >
-                            <div className="w-6 h-6 border-2 border-emerald-600 rounded flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-600 transition-colors">
-                              <CheckCircle className="h-4 w-4 text-emerald-600 group-hover:text-white transition-colors" />
-                            </div>
-                            <span className="text-gray-700 font-medium">
-                              {item}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Permits & Vaccinations */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-white rounded-2xl p-6 border shadow-sm">
-                        <h4 className="font-bold text-xl mb-4 flex items-center gap-2 text-gray-900">
-                          <Shield className="h-5 w-5 text-emerald-600" />
-                          Required Permits
-                        </h4>
-                        <ul className="space-y-3">
-                          {trek.requirements.permits.map((permit, index) => (
-                            <li
-                              key={index}
-                              className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg"
-                            >
-                              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                              <span className="text-gray-700">{permit}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="bg-white rounded-2xl p-6 border shadow-sm">
-                        <h4 className="font-bold text-xl mb-4 flex items-center gap-2 text-gray-900">
-                          <Shield className="h-5 w-5 text-blue-600" />
-                          Recommended Vaccinations
-                        </h4>
-                        <ul className="space-y-3">
-                          {trek.requirements.vaccinations.map(
-                            (vaccine, index) => (
-                              <li
-                                key={index}
-                                className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg"
-                              >
-                                <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                <span className="text-gray-700">{vaccine}</span>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedTab === "gallery" && (
-                  <div className="space-y-6">
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                      Photos & Videos
-                    </h2>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {trek.gallery.images.map((image, index) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group"
-                          onClick={() => {
-                            setSelectedImageIndex(index);
-                            setShowImageGallery(true);
-                          }}
-                        >
-                          <Image
-                            src={image}
-                            alt={`Gallery ${index + 1}`}
-                            width={300}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                            <Maximize2 className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Video Section */}
-                    <div className="mt-8">
-                      <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                        <Play className="h-6 w-6 text-emerald-600" />
-                        Trek Videos
-                      </h3>
-                      <div className="bg-black rounded-2xl overflow-hidden">
-                        <iframe
-                          width="100%"
-                          height="500"
-                          src="https://www.youtube.com/embed/sample"
-                          title="Everest Base Camp Trek Video"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="rounded-2xl"
-                        ></iframe>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedTab === "reviews" && (
-                  <div className="space-y-6">
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">
-                      Traveler Reviews
-                    </h2>
-
-                    <div className="bg-gradient-to-r from-emerald-50 to-white rounded-2xl p-8 border border-emerald-100">
-                      <div className="flex items-center justify-between mb-8">
-                        <div>
-                          <div className="text-5xl font-bold text-gray-900 mb-2">
-                            {trek.rating}/5
-                          </div>
-                          <div className="flex items-center gap-1 mb-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-6 w-6 ${
-                                  i < Math.floor(trek.rating)
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "fill-gray-300 text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-gray-600">
-                            {trek.reviewCount} verified reviews
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600 mb-2">
-                            Success Rate
-                          </div>
-                          <div className="text-3xl font-bold text-emerald-600">
-                            {trek.successRate}%
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Review Stats */}
-                      <div className="space-y-2 mb-8">
-                        {[5, 4, 3, 2, 1].map((stars) => (
-                          <div key={stars} className="flex items-center gap-3">
-                            <div className="w-12 text-sm text-gray-600">
-                              {stars} stars
-                            </div>
-                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-amber-400"
-                                style={{ width: `${(stars / 5) * 80}%` }}
-                              ></div>
-                            </div>
-                            <div className="w-12 text-sm text-gray-600 text-right">
-                              {Math.round((stars / 5) * trek.reviewCount)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Featured Review */}
-                      <div className="bg-white rounded-xl p-6 border shadow-sm">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
-                            JS
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">
-                              John Smith
-                            </h4>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className="h-4 w-4 fill-amber-400 text-amber-400"
-                                />
-                              ))}
-                              <span className="text-sm text-gray-600 ml-2">
-                                2 weeks ago
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 italic">
-                          "An absolutely life-changing experience! The guides
-                          were incredible, the scenery was breathtaking, and the
-                          organization was flawless. Highly recommend to anyone
-                          looking for adventure!"
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:w-1/3">
-            <div className="sticky top-24 space-y-6">
-              {/* Booking Card */}
-              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-6 shadow-xl text-white">
-                <div className="mb-6">
-                  <div className="text-sm text-emerald-200 mb-1">
-                    Total Cost
-                  </div>
-                  <div className="text-4xl font-bold mb-1">
-                    ${calculateTotalCost().toLocaleString()}
-                  </div>
-                  <div className="text-emerald-200">per person</div>
-                </div>
-
+      {/* Tabs Navigation */}
+      <div className="bg-white border-b shadow-sm sticky top-15 z-30 border-2">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-8 overflow-x-auto py-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
                 <button
-                  onClick={handleBookNow}
-                  disabled={isLoading}
-                  className="w-full bg-white hover:bg-gray-100 text-emerald-700 py-4 rounded-xl font-bold text-lg mb-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  key={tab.id}
+                  onClick={() => setSelectedTab(tab.id)}
+                  className={`flex items-center gap-2 py-4 border-b-3 transition-all whitespace-nowrap font-medium ${
+                    selectedTab === tab.id
+                      ? "border-emerald-600 text-emerald-600"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                  }`}
                 >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-700"></div>
-                      Processing...
-                    </span>
-                  ) : (
-                    "Book Now"
-                  )}
+                  <Icon className="h-5 w-5" />
+                  {tab.label}
                 </button>
-
-                <button className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-3 rounded-xl font-semibold mb-3 transition-colors">
-                  Request Custom Quote
-                </button>
-
-                <div className="flex gap-2 pt-4 border-t border-emerald-500">
-                  <button
-                    onClick={handleShare}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </button>
-                  <button className="flex-1 bg-emerald-500 hover:bg-emerald-400 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <Heart className="h-4 w-4" />
-                    Save
-                  </button>
-                  <button className="flex-1 bg-emerald-500 hover:bg-emerald-400 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <Download className="h-4 w-4" />
-                    PDF
-                  </button>
-                </div>
-              </div>
-
-              {/* Inclusions/Exclusions Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg border">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-900">
-                  <CheckCircle className="h-5 w-5 text-emerald-600" />
-                  What's Included
-                </h3>
-                <ul className="space-y-2 mb-6">
-                  {trek.inclusions.slice(0, 5).map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 text-sm text-gray-700"
-                    >
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="#"
-                  className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-1"
-                >
-                  View all inclusions
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              </div>
-
-              {/* Quick Info Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg border">
-                <h3 className="font-bold text-lg mb-4 text-gray-900">
-                  Quick Facts
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Best Time</span>
-                    <span className="font-semibold text-gray-900">
-                      {trek.bestTime.months.slice(0, 3).join(", ")}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Start Point</span>
-                    <span className="font-semibold text-gray-900">
-                      {trek.startPoint}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">End Point</span>
-                    <span className="font-semibold text-gray-900">
-                      {trek.endPoint}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">Min Altitude</span>
-                    <span className="font-semibold text-gray-900">
-                      {trek.minAltitude.toLocaleString()} m
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
-                <h3 className="font-bold text-lg mb-3 text-gray-900">
-                  Need Assistance?
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Our trek specialists are available 24/7 to answer your
-                  questions.
-                </p>
-                <div className="space-y-2">
-                  <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Call Us
-                  </button>
-                  <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Live Chat
-                  </button>
-                  <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email Us
-                  </button>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Image Gallery Modal */}
-      {showImageGallery && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-7xl bg-black rounded-lg overflow-hidden">
-            <button
-              onClick={() => setShowImageGallery(false)}
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-10 transition-colors"
-            >
-              <XCircle className="h-6 w-6" />
-            </button>
+      {/* Main Content */}
+      <div className="px-4 py-12 max-w-7xl mx-auto flex flex-col lg:flex-row gap-2 lg:gap-8">
+        <div className="gap-8 flex-2">
+          {/* Main Content Column */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Overview Tab */}
+            {selectedTab === "overview" && (
+              <>
+                {/* Trek Description */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <Info className="h-8 w-8 text-emerald-600" />
+                    Trek Overview
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed text-lg mb-6">
+                    {trek.longDescription}
+                  </p>
 
-            <div className="flex flex-col lg:flex-row h-[90vh]">
-              {/* Main Image */}
-              <div className="lg:w-3/4 p-4 flex items-center justify-center">
-                <Image
-                  src={trek.gallery.images[selectedImageIndex]}
-                  alt={`Gallery Image ${selectedImageIndex + 1}`}
-                  width={1200}
-                  height={800}
-                  className="w-auto h-auto max-h-full rounded-lg"
-                />
-              </div>
-
-              {/* Thumbnails Sidebar */}
-              <div className="lg:w-1/4 p-4 bg-black/50 border-l border-gray-800 overflow-y-auto">
-                <h3 className="text-xl font-bold mb-4 text-white sticky top-0 bg-black/80 backdrop-blur-sm p-2 rounded-lg">
-                  Image Gallery ({trek.gallery.images.length})
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {trek.gallery.images.map((imgUrl, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImageIndex === index
-                          ? "border-emerald-500 scale-105"
-                          : "border-transparent hover:border-gray-600"
-                      }`}
-                    >
-                      <Image
-                        src={imgUrl}
-                        alt={`Thumbnail ${index + 1}`}
-                        width={150}
-                        height={150}
-                        className="w-full h-full object-cover"
-                      />
-                      <div
-                        className={`absolute inset-0 bg-emerald-600/20 transition-opacity ${
-                          selectedImageIndex === index
-                            ? "opacity-100"
-                            : "opacity-0"
-                        }`}
-                      ></div>
-                    </button>
-                  ))}
+                  {/* Highlights Grid */}
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <Star className="h-6 w-6 text-amber-500" />
+                      Trek Highlights
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {trek.highlights.map((highlight, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-start gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100 hover:shadow-md transition-shadow"
+                        >
+                          <CheckCircle className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-900 font-medium">
+                            {highlight}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Video Thumbnail */}
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                  <h4 className="font-semibold mb-3 text-white">Video</h4>
-                  <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 transition-colors">
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <Play className="h-12 w-12 text-white" />
+                {/* Altitude Profile Chart */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <TrendingUp className="h-7 w-7 text-emerald-600" />
+                    Altitude Profile
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={altitudeChartData}>
+                      <defs>
+                        <linearGradient
+                          id="altitudeGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#10b981"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#10b981"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="day"
+                        stroke="#6b7280"
+                        style={{ fontSize: "12px" }}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        style={{ fontSize: "12px" }}
+                        label={{
+                          value: "Altitude (meters)",
+                          angle: -90,
+                          position: "insideLeft",
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
+                        formatter={(value: number) => [`${value}m`, "Altitude"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="altitude"
+                        stroke="#10b981"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#altitudeGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-900">
+                          Acclimatization Important
+                        </p>
+                        <p className="text-sm text-amber-800 mt-1">
+                          Notice the rest days at Namche (Day 4) and Dingboche
+                          (Day 7) for proper acclimatization. This is crucial
+                          for preventing altitude sickness.
+                        </p>
+                      </div>
                     </div>
-                    <Image
-                      src={trek.gallery.coverImage}
-                      alt="Video thumbnail"
-                      width={300}
-                      height={169}
-                      className="w-full h-full object-cover"
-                    />
                   </div>
+                </div>
+
+                {/* Temperature Chart */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Thermometer className="h-7 w-7 text-emerald-600" />
+                    Monthly Temperature Range
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={temperatureData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="month" stroke="#6b7280" />
+                      <YAxis
+                        stroke="#6b7280"
+                        label={{
+                          value: "Temperature (°C)",
+                          angle: -90,
+                          position: "insideLeft",
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="high" fill="#f59e0b" name="High Temp" />
+                      <Bar dataKey="low" fill="#3b82f6" name="Low Temp" />
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  {/* Best Time Indicator */}
+                  <div className="mt-6 grid md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sun className="h-5 w-5 text-emerald-600" />
+                        <span className="font-semibold text-emerald-900">
+                          Spring (Mar-May)
+                        </span>
+                      </div>
+                      <p className="text-sm text-emerald-800">
+                        Clear skies, blooming rhododendrons, moderate
+                        temperatures
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CloudRain className="h-5 w-5 text-blue-600" />
+                        <span className="font-semibold text-blue-900">
+                          Monsoon (Jun-Aug)
+                        </span>
+                      </div>
+                      <p className="text-sm text-blue-800">
+                        Heavy rain, leeches, cloudy views - not recommended
+                      </p>
+                    </div>
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Eye className="h-5 w-5 text-amber-600" />
+                        <span className="font-semibold text-amber-900">
+                          Autumn (Sep-Nov)
+                        </span>
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        Perfect weather, crystal clear views, peak season
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Difficulty Radar Chart */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Compass className="h-7 w-7 text-emerald-600" />
+                    Trek Difficulty Analysis
+                  </h3>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <RadarChart data={difficultyRadarData}>
+                      <PolarGrid stroke="#e5e7eb" />
+                      <PolarAngleAxis dataKey="aspect" stroke="#6b7280" />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 100]}
+                        stroke="#6b7280"
+                      />
+                      <Radar
+                        name="Difficulty Level"
+                        dataKey="value"
+                        stroke="#10b981"
+                        fill="#10b981"
+                        fillOpacity={0.6}
+                      />
+                      <Tooltip />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    {difficultyRadarData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <span className="text-gray-700">{item.aspect}</span>
+                        <span className="font-bold text-emerald-600">
+                          {item.value}/100
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Inclusions/Exclusions */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-2xl p-6 shadow-lg border">
+                    <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-emerald-600">
+                      <CheckCircle className="h-6 w-6" />
+                      What's Included
+                    </h3>
+                    <ul className="space-y-2">
+                      {trek.inclusions?.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-gray-700"
+                        >
+                          <CheckCircle className="h-4 w-4 text-emerald-600 mt-1 flex-shrink-0" />
+                          <span className="text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 shadow-lg border">
+                    <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-red-600">
+                      <XCircle className="h-6 w-6" />
+                      What's Not Included
+                    </h3>
+                    <ul className="space-y-2">
+                      {trek.exclusions?.slice(0, 11).map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-gray-700"
+                        >
+                          <XCircle className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+                          <span className="text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Itinerary Tab */}
+            {selectedTab === "itinerary" && (
+              <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                  <Map className="h-8 w-8 text-emerald-600" />
+                  Detailed Day-by-Day Itinerary
+                </h2>
+
+                <div className="space-y-6">
+                  {trek.itinerary?.map((day, idx) => (
+                    <div
+                      key={idx}
+                      className="border-l-4 border-emerald-600 pl-8 pb-8 relative hover:border-emerald-700 transition-colors"
+                    >
+                      {/* Day Number Circle */}
+                      <div className="absolute -left-4 top-0 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                        {day.day}
+                      </div>
+
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="text-sm text-emerald-600 font-semibold mb-2">
+                            Day {day.day}
+                          </div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                            {day.title}
+                          </h3>
+                        </div>
+                        <div className="flex gap-2 mt-2 md:mt-0">
+                          <span className="bg-emerald-50 px-4 py-2 rounded-lg text-sm font-medium text-emerald-700 whitespace-nowrap">
+                            {day.duration}
+                          </span>
+                          <span className="bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium text-blue-700 whitespace-nowrap">
+                            {day.altitude}m
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-700 leading-relaxed mb-6">
+                        {day.description}
+                      </p>
+
+                      {/* Day Stats Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 p-4 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <Mountain className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <div className="text-xs text-gray-600">
+                              Altitude
+                            </div>
+                            <div className="font-semibold text-gray-900">
+                              {day.altitude}m
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <div className="text-xs text-gray-600">
+                              Distance
+                            </div>
+                            <div className="font-semibold text-gray-900">
+                              {day.distance}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Bed className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <div className="text-xs text-gray-600">Stay</div>
+                            <div className="font-semibold text-gray-900 capitalize">
+                              {day.accommodation}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Utensils className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <div className="text-xs text-gray-600">Meals</div>
+                            <div className="font-semibold text-gray-900">
+                              {day.meals.length}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Highlights */}
+                      {day.highlights && day.highlights.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {day.highlights.map((highlight, i) => (
+                            <span
+                              key={i}
+                              className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm font-medium border border-amber-200"
+                            >
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {day.notes && (
+                        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                          <div className="flex items-start gap-2">
+                            <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-blue-900">{day.notes}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Costs Tab */}
+            {selectedTab === "costs" && (
+              <div className="space-y-6 ">
+                {/* Cost Breakdown */}
+                <div className=" rounded-2xl p-8 shadow-lg border bg-linear-to-br from-emerald-50 to-white border-emerald-100">
+                  <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <DollarSign className="h-8 w-8 text-emerald-600" />
+                    Detailed Cost Breakdown
+                  </h2>
+
+                  {trek.costBreakdown && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between py-4 border-b hover:bg-gray-50 px-4 rounded-lg transition-colors">
+                        <div>
+                          <span className="text-gray-900 font-medium">
+                            Professional Guide
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            ${trek.costBreakdown.guidePerDay}/day ×{" "}
+                            {trek.duration} days
+                          </p>
+                        </div>
+                        <span className="font-bold text-lg">
+                          ${trek.costBreakdown.guidePerDay * trek.duration}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between py-4 border-b hover:bg-gray-50 px-4 rounded-lg transition-colors">
+                        <div>
+                          <span className="text-gray-900 font-medium">
+                            Trekking Permits
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            TIMS, National Park, Municipality
+                          </p>
+                        </div>
+                        <span className="font-bold text-lg">
+                          ${trek.costBreakdown.permitsPerPerson}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between py-4 border-b hover:bg-gray-50 px-4 rounded-lg transition-colors">
+                        <div>
+                          <span className="text-gray-900 font-medium">
+                            Accommodation
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            ${trek.costBreakdown.accommodationPerDay}/day ×{" "}
+                            {trek.duration} days
+                          </p>
+                        </div>
+                        <span className="font-bold text-lg">
+                          $
+                          {trek.costBreakdown.accommodationPerDay *
+                            trek.duration}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between py-4 border-b hover:bg-gray-50 px-4 rounded-lg transition-colors">
+                        <div>
+                          <span className="text-gray-900 font-medium">
+                            Meals (3 per day)
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            ${trek.costBreakdown.mealsPerDay}/day ×{" "}
+                            {trek.duration} days
+                          </p>
+                        </div>
+                        <span className="font-bold text-lg">
+                          ${trek.costBreakdown.mealsPerDay * trek.duration}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between py-4 border-b hover:bg-gray-50 px-4 rounded-lg transition-colors">
+                        <div>
+                          <span className="text-gray-900 font-medium">
+                            Transportation
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            Kathmandu - Lukla - Kathmandu flights
+                          </p>
+                        </div>
+                        <span className="font-bold text-lg">
+                          ${trek.costBreakdown.transportPerPerson}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between pt-6 text-xl font-bold bg-emerald-50 p-6 rounded-xl">
+                        <span className="text-gray-900">
+                          Base Package Total
+                        </span>
+                        <span className="text-emerald-600">
+                          $
+                          {calculateTotalCost() -
+                            selectedServices.reduce((sum, serviceId) => {
+                              const service = trek.extraServices?.find(
+                                (s) => s.name === serviceId
+                              );
+                              return sum + (service?.costPerPerson || 0);
+                            }, 0)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Extra Services */}
+                {trek.extraServices && (
+                  <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                      <Backpack className="h-7 w-7 text-emerald-600" />
+                      Additional Services & Add-ons
+                    </h3>
+                    <div className="space-y-4">
+                      {trek.extraServices.map((service, idx) => (
+                        <div
+                          key={idx}
+                          className={`border-2 rounded-xl p-5 transition-all cursor-pointer ${
+                            selectedServices.includes(service.name)
+                              ? "border-emerald-600 bg-emerald-50"
+                              : "border-gray-200 hover:border-emerald-300 hover:bg-gray-50"
+                          }`}
+                          onClick={() => {
+                            if (service.isOptional) {
+                              if (selectedServices.includes(service.name)) {
+                                setSelectedServices(
+                                  selectedServices.filter(
+                                    (s) => s !== service.name
+                                  )
+                                );
+                              } else {
+                                setSelectedServices([
+                                  ...selectedServices,
+                                  service.name,
+                                ]);
+                              }
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 flex items-start gap-4">
+                              {service.isOptional && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedServices.includes(
+                                    service.name
+                                  )}
+                                  onChange={() => {}}
+                                  className="w-6 h-6 text-emerald-600 rounded focus:ring-emerald-500 mt-1 cursor-pointer"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="font-bold text-gray-900 text-lg">
+                                    {service.name}
+                                  </h4>
+                                  {!service.isOptional && (
+                                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                      Required
+                                    </span>
+                                  )}
+                                  {service.isOptional && (
+                                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                      Optional
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-gray-600">
+                                  {service.description}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right ml-6">
+                              <div className="text-2xl font-bold text-emerald-600">
+                                ${service.costPerPerson}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                per person
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Selected Services Summary */}
+                    {selectedServices.length > 0 && (
+                      <div className="mt-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                        <h4 className="font-bold text-blue-900 mb-3">
+                          Selected Additional Services
+                        </h4>
+                        <div className="space-y-2">
+                          {selectedServices.map((serviceName, idx) => {
+                            const service = trek.extraServices?.find(
+                              (s) => s.name === serviceName
+                            );
+                            return (
+                              <div
+                                key={idx}
+                                className="flex justify-between text-blue-900"
+                              >
+                                <span>{serviceName}</span>
+                                <span className="font-semibold">
+                                  +${service?.costPerPerson}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Grand Total */}
+                    <div className="mt-6 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-6 rounded-xl shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="text-emerald-100 text-sm mb-1">
+                            Total Package Cost
+                          </div>
+                          <div className="text-4xl font-bold">
+                            ${calculateTotalCost()}
+                          </div>
+                          <div className="text-emerald-100 text-sm mt-1">
+                            per person
+                          </div>
+                        </div>
+                        <button className="bg-white text-emerald-600 px-8 py-4 rounded-xl font-bold hover:bg-emerald-50 transition-colors">
+                          Book Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Requirements Tab Continued */}
+            {selectedTab === "requirements" && (
+              <div className="space-y-6">
+                {/* Fitness Requirements */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <Activity className="h-8 w-8 text-emerald-600" />
+                    Fitness & Experience Requirements
+                  </h2>
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-6 rounded-r-xl">
+                    <p className="text-gray-800 leading-relaxed text-lg">
+                      {trek.requirements?.fitnessLevel}
+                    </p>
+                  </div>
+
+                  {/* Fitness Level Indicators */}
+                  <div className="mt-8 grid md:grid-cols-3 gap-6">
+                    <div className="bg-white border rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Activity className="h-6 w-6 text-emerald-600" />
+                        <span className="font-bold text-gray-900">
+                          Cardiovascular
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                        <div
+                          className="bg-red-600 h-3 rounded-full"
+                          style={{ width: "85%" }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        High intensity required
+                      </p>
+                    </div>
+                    <div className="bg-white border rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <TrendingUp className="h-6 w-6 text-emerald-600" />
+                        <span className="font-bold text-gray-900">
+                          Altitude
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                        <div
+                          className="bg-orange-500 h-3 rounded-full"
+                          style={{ width: "95%" }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Extreme altitude challenge
+                      </p>
+                    </div>
+                    <div className="bg-white border rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Compass className="h-6 w-6 text-emerald-600" />
+                        <span className="font-bold text-gray-900">
+                          Endurance
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                        <div
+                          className="bg-amber-500 h-3 rounded-full"
+                          style={{ width: "80%" }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Multiple long days
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gear Checklist */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Backpack className="h-7 w-7 text-emerald-600" />
+                    Essential Gear Checklist
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {trek.requirements?.gearChecklist?.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <CheckCircle className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-800">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-blue-900">
+                        All gear can be rented in Kathmandu. Quality gear is
+                        essential for safety and comfort.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Permits & Vaccinations */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-2xl p-6 shadow-lg border">
+                    <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-emerald-600">
+                      <Shield className="h-6 w-6" />
+                      Required Permits
+                    </h3>
+                    <div className="space-y-3">
+                      {trek.requirements?.permits?.map((permit, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-gray-700">{permit}</span>
+                          <span className="font-bold text-emerald-600">
+                            NPR{" "}
+                            {parseInt(
+                              permit.split(" - NPR ")[1]?.replace(",", "") ||
+                                "0"
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 shadow-lg border">
+                    <h3 className="font-bold text-xl mb-4 flex items-center gap-2 text-emerald-600">
+                      <Shield className="h-6 w-6" />
+                      Recommended Vaccinations
+                    </h3>
+                    <div className="space-y-3">
+                      {trek.requirements?.vaccinations?.map((vaccine, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        >
+                          <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          <span className="text-gray-700">{vaccine}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insurance Requirements */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <Shield className="h-7 w-7 text-emerald-600" />
+                    Insurance Requirements
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <AlertTriangle className="h-6 w-6 text-red-600" />
+                        <span className="font-bold text-red-900">
+                          Mandatory Coverage
+                        </span>
+                      </div>
+                      <p className="text-sm text-red-800">
+                        Emergency helicopter evacuation up to 6,000m altitude
+                      </p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <DollarSign className="h-6 w-6 text-amber-600" />
+                        <span className="font-bold text-amber-900">
+                          Minimum Coverage
+                        </span>
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        At least $100,000 medical coverage including altitude
+                        sickness
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Compass className="h-6 w-6 text-blue-600" />
+                        <span className="font-bold text-blue-900">
+                          Recommended Providers
+                        </span>
+                      </div>
+                      <p className="text-sm text-blue-800">
+                        World Nomads, Global Rescue, IMG, Battleface
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Gallery Tab */}
+            {selectedTab === "gallery" && (
+              <div className="space-y-6">
+                {/* Gallery Header */}
+                <div className="bg-white rounded-2xl p-8 shadow-lg border">
+                  <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <Camera className="h-8 w-8 text-emerald-600" />
+                    Photo & Video Gallery
+                  </h2>
+                  <p className="text-gray-700 mb-8">
+                    Explore stunning visuals from the Everest Base Camp trek
+                    captured by our trekkers and guides.
+                  </p>
+
+                  {/* Featured Images Grid */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-8">
+                    {trek.gallery.images.map((image, idx) => (
+                      <div
+                        key={idx}
+                        className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group"
+                        onClick={() => {
+                          setSelectedImageIndex(idx);
+                          setShowImageGallery(true);
+                        }}
+                      >
+                        <Image
+                          src={image}
+                          alt={`Trek image ${idx + 1}`}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Video Section */}
+                  {trek.gallery.videos && trek.gallery.videos.length > 0 && (
+                    <div className="mt-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Play className="h-5 w-5 text-emerald-600" />
+                        Trek Experience Video
+                      </h3>
+                      <div className="relative aspect-video bg-black rounded-2xl overflow-hidden">
+                        <iframe
+                          src={trek.gallery.videos[0].replace(
+                            "watch?v=",
+                            "embed/"
+                          )}
+                          className="absolute inset-0 w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Download Section */}
+                  <div className="mt-8 p-6 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl border">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-xl mb-2">
+                          Download Trek Resources
+                        </h3>
+                        <p className="text-gray-700">
+                          Get detailed maps, packing lists, and preparation
+                          guides
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button className="bg-white border border-emerald-600 text-emerald-600 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors flex items-center gap-2">
+                          <Download className="h-4 w-4" />
+                          Packing List (PDF)
+                        </button>
+                        <button className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                          <Map className="h-4 w-4" />
+                          Route Map
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reviews Tab */}
+            {selectedTab === "reviews" && (
+              <div className="space-y-6">
+                <h2 className="text-3xl font-bold mb-6 text-gray-900">
+                  Traveler Reviews
+                </h2>
+
+                <div className="bg-gradient-to-r from-emerald-50 to-white rounded-2xl p-8 border border-emerald-100">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <div className="text-5xl font-bold text-gray-900 mb-2">
+                        {trek.rating}/5
+                      </div>
+                      <div className="flex items-center gap-1 mb-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-6 w-6 ${
+                              i < Math.floor(trek.rating)
+                                ? "fill-amber-400 text-amber-400"
+                                : "fill-gray-300 text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-gray-600">
+                        {trek.reviewCount} verified reviews
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600 mb-2">
+                        Success Rate
+                      </div>
+                      <div className="text-3xl font-bold text-emerald-600">
+                        {trek.successRate}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Review Stats */}
+                  <div className="space-y-2 mb-8">
+                    {[5, 4, 3, 2, 1].map((stars) => (
+                      <div key={stars} className="flex items-center gap-3">
+                        <div className="w-12 text-sm text-gray-600">
+                          {stars} stars
+                        </div>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400"
+                            style={{ width: `${(stars / 5) * 80}%` }}
+                          ></div>
+                        </div>
+                        <div className="w-12 text-sm text-gray-600 text-right">
+                          {Math.round((stars / 5) * trek.reviewCount)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Featured Review */}
+                  <div className="bg-white rounded-xl p-6 border shadow-sm">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+                        JS
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">John Smith</h4>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="h-4 w-4 fill-amber-400 text-amber-400"
+                            />
+                          ))}
+                          <span className="text-sm text-gray-600 ml-2">
+                            2 weeks ago
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 italic">
+                      "An absolutely life-changing experience! The guides were
+                      incredible, the scenery was breathtaking, and the
+                      organization was flawless. Highly recommend to anyone
+                      looking for adventure!"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="space-y-6 flex-1">
+          {/* Booking Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-xl border border-emerald-100 ">
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold text-emerald-600 mb-1">
+                ${calculateTotalCost()}
+              </div>
+              <div className="text-gray-600">per person</div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-gray-600">Duration</span>
+                <span className="font-bold">{trek.duration} days</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-gray-600">Difficulty</span>
+                <span className="font-bold capitalize">{trek.difficulty}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-gray-600">Max Altitude</span>
+                <span className="font-bold">{trek.maxAltitude}m</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-gray-600">Group Size</span>
+                <span className="font-bold">2-12 people</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b">
+                <span className="text-gray-600">Best Season</span>
+                <span className="font-bold">Mar-May, Sep-Nov</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-4 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg">
+                Book Now
+              </button>
+              <button className="w-full border-2 border-emerald-600 text-emerald-600 py-4 rounded-xl font-semibold hover:bg-emerald-50 transition-colors">
+                Request Custom Dates
+              </button>
+              <button className="w-full border border-gray-300 text-gray-700 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <Heart className="h-5 w-5" />
+                Save to Wishlist
+              </button>
+            </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <div className="text-sm text-gray-600 mb-2">Need help?</div>
+              <div className="flex items-center gap-3">
+                <button className="flex-1 bg-blue-50 text-blue-700 py-3 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Call Now
+                </button>
+                <button className="flex-1 bg-green-50 text-green-700 py-3 rounded-lg font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Facts */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border">
+            <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+              <Info className="h-5 w-5 text-emerald-600" />
+              Quick Facts
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Region: {trek.region.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Best Time: {trek.bestTime.months.slice(0, 3).join(", ")}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Walking Hours: 5-7 hours/day
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Guide Ratio: 1 guide per 4 trekkers
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Plane className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Start/End: {trek.startPoint}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Hotel className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Accommodation: Teahouses & Lodges
+                </span>
+              </div>
+
+              {/* min/max altitude */}
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Altitude: {trek.minAltitude}m - {trek.maxAltitude}m
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Safety Information */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border">
+            <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+              <Shield className="h-5 w-5 text-emerald-600" />
+              Safety First
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-emerald-100 p-2 rounded-lg">
+                  <Activity className="h-4 w-4 text-emerald-700" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    Acclimatization Days
+                  </p>
+                  <p className="text-sm text-gray-600">2 scheduled rest days</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Thermometer className="h-4 w-4 text-blue-700" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Oxygen Available</p>
+                  <p className="text-sm text-gray-600">
+                    Emergency cylinders carried
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-red-100 p-2 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-red-700" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">First Aid Trained</p>
+                  <p className="text-sm text-gray-600">All guides certified</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Share Section */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border">
+            <h3 className="font-bold text-xl mb-4">Share this trek</h3>
+            <div className="flex gap-3">
+              <button className="flex-1 bg-blue-50 text-blue-700 py-3 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+              <button className="flex-1 bg-gray-50 text-gray-700 py-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+                <Download className="h-4 w-4" />
+                PDF
+              </button>
+            </div>
+          </div>
+
+          {/* Inclusions/Exclusions Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-900">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+              What's Included
+            </h3>
+            <ul className="space-y-2 mb-6">
+              {trek.inclusions.slice(0, 5).map((item, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-gray-700"
+                >
+                  <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="#"
+              className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-1"
+            >
+              View all inclusions
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          {/* Contact Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+            <h3 className="font-bold text-lg mb-3 text-gray-900">
+              Need Assistance?
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Our trek specialists are available 24/7 to answer your questions.
+            </p>
+            <div className="space-y-2">
+              <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                <Phone className="h-4 w-4" />
+                Call Us
+              </button>
+              <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Live Chat
+              </button>
+              <button className="w-full bg-white hover:bg-gray-50 border border-blue-300 text-blue-700 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                <Mail className="h-4 w-4" />
+                Email Us
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Image Gallery Modal */}
+      {showImageGallery && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-6xl">
+            {/* Close button */}
+            <button
+              onClick={() => setShowImageGallery(false)}
+              className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors"
+            >
+              <XCircle className="h-8 w-8" />
+            </button>
+
+            {/* Main image */}
+            <div className="relative aspect-video rounded-xl overflow-hidden mb-4">
+              <Image
+                src={trek.gallery.images[selectedImageIndex]}
+                alt="Gallery image"
+                fill
+                className="object-contain"
+                sizes="100vw"
+              />
+            </div>
+
+            {/* Thumbnails */}
+            <div className="flex gap-2 overflow-x-auto py-2">
+              {trek.gallery.images.map((image, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 ${
+                    selectedImageIndex === idx ? "ring-2 ring-emerald-500" : ""
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
+
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-8 right-8 bg-emerald-600 text-white p-3 rounded-full shadow-lg hover:bg-emerald-700 transition-colors z-20"
+      >
+        <ArrowRight className="h-5 w-5 rotate-90" />
+      </button>
 
       {/* CTA Footer */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white py-16 mt-12">
