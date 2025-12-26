@@ -11,7 +11,7 @@ const nextConfig = {
       // Add other domains as needed
       {
         protocol: "https",
-        hostname: "your-bucket.r2.dev", // For other R2 buckets
+        hostname: "pub-2a7a6ba5327c4b54a1dc8ddde1d1dd85.r2.dev", // For other R2 buckets
       },
     ],
     // Optional: Adjust image optimization settings

@@ -112,14 +112,14 @@ export default function RegionForm({
     isActive: region?.isActive ?? true,
     featured: region?.featured || false,
     popularity: region?.popularity || 0,
+    gallery: region?.gallery || [],
+    image: region?.image || null,
   });
 
   const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState(region?.image || "");
+  const [imagePreview, setImagePreview] = useState("");
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
-    region?.gallery || []
-  );
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [newHighlight, setNewHighlight] = useState("");
   const [newPermit, setNewPermit] = useState("");
   const [newTag, setNewTag] = useState("");
@@ -489,10 +489,15 @@ export default function RegionForm({
               <div className="space-y-2">
                 <Label>Main Image *</Label>
                 <div className="relative h-48 rounded-lg border-2 border-dashed border-muted">
-                  {imagePreview ? (
+                  {imagePreview || formData.image ? (
                     <>
                       <Image
-                        src={imagePreview}
+                        src={
+                          imagePreview
+                            ? imagePreview
+                            : process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                              formData.image
+                        }
                         alt="Main preview"
                         fill
                         className="rounded-lg object-cover"
@@ -500,8 +505,13 @@ export default function RegionForm({
                       <button
                         type="button"
                         onClick={() => {
-                          setImage(null);
-                          setImagePreview("");
+                          if (region?.image && !imagePreview) {
+                            // If existing image is being removed
+                            setFormData((prev) => ({ ...prev, image: null }));
+                          } else {
+                            setImage(null);
+                            setImagePreview("");
+                          }
                         }}
                         className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
                       >
@@ -529,6 +539,34 @@ export default function RegionForm({
               <div className="space-y-2">
                 <Label>Gallery Images</Label>
                 <div className="grid grid-cols-3 gap-2">
+                  {formData?.gallery?.map((imgUrl: string, index: number) => (
+                    <div
+                      key={index}
+                      className="relative h-24 rounded-lg border"
+                    >
+                      <Image
+                        src={process.env.NEXT_PUBLIC_ClOUDFLARE_API + imgUrl}
+                        alt={`Gallery ${index + 1}`}
+                        fill
+                        className="rounded-lg object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedGallery = formData.gallery.filter(
+                            (img: string, i: number) => i !== index
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            gallery: updatedGallery,
+                          }));
+                        }}
+                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                   {galleryPreviews.map((preview, index) => (
                     <div
                       key={index}

@@ -44,16 +44,53 @@ import {
   Briefcase,
   Shield,
   Video,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getTrekkingRegions } from "@/api/routes/trekking-regions";
 
+// DND Kit imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 interface RouteFormProps {
   route?: any;
   onSuccess?: () => void;
   onCancel?: () => void;
+}
+
+interface ItineraryDay {
+  day: number;
+  title: string;
+  description: string;
+  altitude: number;
+  distance: string;
+  duration: string;
+  overnight: string;
+  accommodation: string;
+  meals: string[];
+  highlights: string[];
+  notes?: string;
 }
 
 const difficultyLevels = [
@@ -91,6 +128,199 @@ const months = [
   "December",
 ];
 
+// Sortable Itinerary Day Component
+function SortableItineraryDay({
+  day,
+  index,
+  isExpanded,
+  onToggle,
+  onChange,
+  onRemove,
+  onDragHandle,
+}: {
+  day: ItineraryDay;
+  index: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onChange: (field: string, value: any) => void;
+  onRemove: () => void;
+  onDragHandle: (listeners: any) => JSX.Element;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: day.day });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-lg border bg-card space-y-4"
+    >
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-3">
+          {onDragHandle(listeners)}
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              {day.day}
+            </div>
+            <div>
+              <h4 className="font-medium">{day.title || `Day ${day.day}`}</h4>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Ruler className="h-3 w-3" />
+                  {day.distance || "0 km"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  {day.altitude || "0"}m
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {day.duration || "0 hours"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="h-8 w-8 p-0"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={onRemove}
+            className="h-8 w-8 p-0"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-4 pt-0 space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Title *</Label>
+              <Input
+                value={day.title}
+                onChange={(e) => onChange("title", e.target.value)}
+                placeholder="e.g., Lukla to Phakding"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Altitude (m)</Label>
+              <Input
+                type="number"
+                value={day.altitude}
+                onChange={(e) => onChange("altitude", e.target.value)}
+                placeholder="e.g., 2860"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Distance</Label>
+              <Input
+                value={day.distance}
+                onChange={(e) => onChange("distance", e.target.value)}
+                placeholder="e.g., 8 km"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Duration</Label>
+              <Input
+                value={day.duration}
+                onChange={(e) => onChange("duration", e.target.value)}
+                placeholder="e.g., 3-4 hours"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Overnight</Label>
+              <Input
+                value={day.overnight}
+                onChange={(e) => onChange("overnight", e.target.value)}
+                placeholder="e.g., Phakding"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Accommodation</Label>
+              <div className="flex items-center gap-2">
+                <Hotel className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={day.accommodation}
+                  onChange={(e) => onChange("accommodation", e.target.value)}
+                  placeholder="e.g., Teahouse"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Meals (comma separated)</Label>
+              <div className="flex items-center gap-2">
+                <Utensils className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={day.meals.join(", ")}
+                  onChange={(e) => onChange("meals", e.target.value)}
+                  placeholder="e.g., Breakfast, Lunch, Dinner"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Highlights (comma separated)</Label>
+              <Input
+                value={day.highlights.join(", ")}
+                onChange={(e) => onChange("highlights", e.target.value)}
+                placeholder="e.g., Scenic flight to Lukla, Buddhist monasteries"
+              />
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                value={day.description}
+                onChange={(e) => onChange("description", e.target.value)}
+                placeholder="Detailed description of the day's trek..."
+                rows={3}
+              />
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label>Notes (Optional)</Label>
+              <Textarea
+                value={day.notes || ""}
+                onChange={(e) => onChange("notes", e.target.value)}
+                placeholder="Additional notes..."
+                rows={2}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RouteForm({
   route,
   onSuccess,
@@ -102,31 +332,33 @@ export default function RouteForm({
     description: route?.description || "",
     region: route?.region?._id || "",
     duration: route?.duration || 0,
-    distance: route?.distance || 0,
+    distance: route?.distance || "0",
     difficulty: route?.difficulty || "moderate",
     startPoint: route?.startPoint || "",
     endPoint: route?.endPoint || "",
-    itinerary: route?.itinerary || [
+    itinerary: (route?.itinerary || [
       {
         day: 1,
         title: "",
         description: "",
         altitude: 0,
-        distance: 0,
+        distance: "0",
         duration: "",
+        overnight: "",
         accommodation: "",
         meals: [],
         highlights: [],
         notes: "",
       },
-    ],
+    ]) as ItineraryDay[],
     costBreakdown: route?.costBreakdown || {
       guidePerDay: 0,
       permitsPerPerson: 0,
       accommodationPerDay: 0,
       mealsPerDay: 0,
       transportPerPerson: 0,
-      insurancePerPerson: 0,
+      guideTransportation: 0,
+      otherCosts: [],
     },
     inclusions: route?.inclusions || [],
     exclusions: route?.exclusions || [],
@@ -145,8 +377,8 @@ export default function RouteForm({
       coverImage: "",
       images: [],
       videos: [],
+      map: "",
     },
-    variations: route?.variations || [],
     extraServices: route?.extraServices || [],
     isActive: route?.isActive ?? true,
     isFeatured: route?.isFeatured || false,
@@ -158,11 +390,9 @@ export default function RouteForm({
   const [newGear, setNewGear] = useState("");
   const [newVaccination, setNewVaccination] = useState("");
   const [newPermit, setNewPermit] = useState("");
-  const [newVariation, setNewVariation] = useState({
-    name: "",
-    duration: 0,
-    difficulty: "",
+  const [newOtherCost, setNewOtherCost] = useState({
     description: "",
+    amount: 0,
   });
   const [newService, setNewService] = useState({
     name: "",
@@ -179,12 +409,21 @@ export default function RouteForm({
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
     route?.gallery?.images || []
   );
+  const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [loading, setLoading] = useState(false);
 
   const { data: regions } = useQuery({
     queryFn: getTrekkingRegions,
     queryKey: ["trekking-regions"],
   });
+
+  // DND Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Auto-generate slug
   useEffect(() => {
@@ -291,58 +530,133 @@ export default function RouteForm({
   // Itinerary handlers
   const handleItineraryChange = (index: number, field: string, value: any) => {
     const updatedItinerary = [...formData.itinerary];
-    if (field === "meals") {
+
+    if (field === "meals" || field === "highlights") {
       updatedItinerary[index] = {
         ...updatedItinerary[index],
-        [field]: value.split(",").map((m: string) => m.trim()),
-      };
-    } else if (field === "highlights") {
-      updatedItinerary[index] = {
-        ...updatedItinerary[index],
-        [field]: value.split(",").map((h: string) => h.trim()),
+        [field]:
+          typeof value === "string"
+            ? value
+                .split(",")
+                .map((item: string) => item.trim())
+                .filter(Boolean)
+            : value,
       };
     } else {
       updatedItinerary[index] = {
         ...updatedItinerary[index],
         [field]:
-          typeof value === "string" && !isNaN(Number(value))
+          typeof value === "string" &&
+          !isNaN(Number(value)) &&
+          field !== "distance"
             ? parseFloat(value)
             : value,
       };
     }
+
     setFormData((prev) => ({ ...prev, itinerary: updatedItinerary }));
   };
 
   const addItineraryDay = () => {
+    const newDay = {
+      day: formData.itinerary.length + 1,
+      title: "",
+      description: "",
+      altitude: 0,
+      distance: "0",
+      duration: "",
+      overnight: "",
+      accommodation: "",
+      meals: [],
+      highlights: [],
+      notes: "",
+    };
+
     setFormData((prev) => ({
       ...prev,
-      itinerary: [
-        ...prev.itinerary,
-        {
-          day: prev.itinerary.length + 1,
-          title: "",
-          description: "",
-          altitude: 0,
-          distance: 0,
-          duration: "",
-          accommodation: "",
-          meals: [],
-          highlights: [],
-          notes: "",
-        },
-      ],
+      itinerary: [...prev.itinerary, newDay],
     }));
+    setExpandedDays((prev) => [...prev, newDay.day]);
   };
 
   const removeItineraryDay = (index: number) => {
     if (formData.itinerary.length > 1) {
+      const dayToRemove = formData.itinerary[index];
       const updatedItinerary = formData.itinerary.filter((_, i) => i !== index);
+
       // Reorder days
       const reorderedItinerary = updatedItinerary.map((day, idx) => ({
         ...day,
         day: idx + 1,
       }));
+
       setFormData((prev) => ({ ...prev, itinerary: reorderedItinerary }));
+      setExpandedDays((prev) => prev.filter((day) => day !== dayToRemove.day));
+    }
+  };
+
+  // Toggle day expansion
+  const toggleDayExpansion = (dayNumber: number) => {
+    setExpandedDays((prev) =>
+      prev.includes(dayNumber)
+        ? prev.filter((d) => d !== dayNumber)
+        : [...prev, dayNumber]
+    );
+  };
+
+  // Collapse/Expand all days
+  const toggleAllDays = () => {
+    if (expandedDays.length === formData.itinerary.length) {
+      setExpandedDays([]);
+    } else {
+      setExpandedDays(formData.itinerary.map((day) => day.day));
+    }
+  };
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setFormData((prev) => {
+        const oldIndex = prev.itinerary.findIndex(
+          (item) => item.day === active.id
+        );
+        const newIndex = prev.itinerary.findIndex(
+          (item) => item.day === over.id
+        );
+
+        const reorderedItinerary = arrayMove(
+          prev.itinerary,
+          oldIndex,
+          newIndex
+        );
+
+        // Update day numbers
+        const updatedItinerary = reorderedItinerary.map((day, index) => ({
+          ...day,
+          day: index + 1,
+        }));
+
+        return {
+          ...prev,
+          itinerary: updatedItinerary,
+        };
+      });
+    }
+  };
+
+  // Handle other costs
+  const handleAddOtherCost = () => {
+    if (newOtherCost.description.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        costBreakdown: {
+          ...prev.costBreakdown,
+          otherCosts: [...(prev.costBreakdown.otherCosts || []), newOtherCost],
+        },
+      }));
+      setNewOtherCost({ description: "", amount: 0 });
     }
   };
 
@@ -388,22 +702,6 @@ export default function RouteForm({
     }
   };
 
-  // Variations handlers
-  const handleAddVariation = () => {
-    if (newVariation.name && newVariation.description) {
-      setFormData((prev) => ({
-        ...prev,
-        variations: [...prev.variations, { ...newVariation }],
-      }));
-      setNewVariation({
-        name: "",
-        duration: 0,
-        difficulty: "",
-        description: "",
-      });
-    }
-  };
-
   // Extra services handlers
   const handleAddService = () => {
     if (newService.name && newService.description) {
@@ -421,6 +719,26 @@ export default function RouteForm({
     }
   };
 
+  const removeUndefinedOrNullAndNested = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj
+
+        .map((item) => removeUndefinedOrNullAndNested(item))
+        .filter((item) => item !== undefined && item !== null);
+    } else if (obj !== null && typeof obj === "object") {
+      const cleanedObj: any = {};
+      Object.keys(obj).forEach((key) => {
+        const value = removeUndefinedOrNullAndNested(obj[key]);
+        if (value !== undefined && value !== null) {
+          cleanedObj[key] = value;
+        }
+      });
+      return cleanedObj;
+    } else {
+      return obj;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -432,7 +750,7 @@ export default function RouteForm({
         description: formData.description,
         region: formData.region,
         duration: Number(formData.duration),
-        distance: Number(formData.distance),
+        distance: formData.distance,
         difficulty: formData.difficulty,
         startPoint: formData.startPoint,
         endPoint: formData.endPoint,
@@ -445,7 +763,10 @@ export default function RouteForm({
           ),
           mealsPerDay: Number(formData.costBreakdown.mealsPerDay),
           transportPerPerson: Number(formData.costBreakdown.transportPerPerson),
-          insurancePerPerson: Number(formData.costBreakdown.insurancePerPerson),
+          guideTransportation: Number(
+            formData.costBreakdown.guideTransportation
+          ),
+          otherCosts: formData.costBreakdown.otherCosts,
         },
         inclusions: formData.inclusions,
         exclusions: formData.exclusions,
@@ -460,7 +781,11 @@ export default function RouteForm({
           weather: formData.bestTime.weather,
           temperatureRange: formData.bestTime.temperatureRange,
         },
-        variations: formData.variations,
+        gallery: {
+          ...formData.gallery,
+          coverImage: coverImagePreview,
+          images: galleryPreviews,
+        },
         extraServices: formData.extraServices,
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
@@ -477,9 +802,11 @@ export default function RouteForm({
         formDataToSend.append("gallery", img);
       });
 
+      console.log("Form Data to send:", formDataToSend);
+
       const url = route
-        ? `http://localhost:4000/api/treks/routes/${route._id}`
-        : "http://localhost:4000/api/treks/routes";
+        ? `http://localhost:4000/api/treks/templates/${route._id}`
+        : "http://localhost:4000/api/treks/templates";
 
       const response = await fetch(url, {
         method: route ? "PUT" : "POST",
@@ -644,16 +971,15 @@ export default function RouteForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="distance">Distance (km) *</Label>
+                <Label htmlFor="distance">Distance *</Label>
                 <div className="flex items-center gap-2">
                   <Ruler className="h-4 w-4 text-muted-foreground" />
                   <Input
                     id="distance"
                     name="distance"
-                    type="number"
                     value={formData.distance}
                     onChange={handleInputChange}
-                    placeholder="e.g., 130"
+                    placeholder="e.g., 130 km"
                     required
                   />
                 </div>
@@ -718,169 +1044,71 @@ export default function RouteForm({
 
           {/* Itinerary */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Itinerary</h3>
-            <div className="space-y-6">
-              {formData.itinerary.map((day, index) => (
-                <div key={index} className="rounded-lg border p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Day {day.day}</h4>
-                    {formData.itinerary.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeItineraryDay(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Itinerary</h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleAllDays}
+                >
+                  {expandedDays.length === formData.itinerary.length
+                    ? "Collapse All"
+                    : "Expand All"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={addItineraryDay}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Day
+                </Button>
+              </div>
+            </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Title</Label>
-                      <Input
-                        value={day.title}
-                        onChange={(e) =>
-                          handleItineraryChange(index, "title", e.target.value)
-                        }
-                        placeholder="e.g., Lukla to Phakding"
-                      />
-                    </div>
+            <div className="space-y-3">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={formData.itinerary.map((day) => day.day)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {formData.itinerary.map((day, index) => (
+                    <SortableItineraryDay
+                      key={day.day}
+                      day={day}
+                      index={index}
+                      isExpanded={expandedDays.includes(day.day)}
+                      onToggle={() => toggleDayExpansion(day.day)}
+                      onChange={(field, value) =>
+                        handleItineraryChange(index, field, value)
+                      }
+                      onRemove={() => removeItineraryDay(index)}
+                      onDragHandle={(listeners) => (
+                        <button
+                          type="button"
+                          className="cursor-grab active:cursor-grabbing"
+                          // {...attributes}
+                          {...listeners}
+                        >
+                          <GripVertical className="h-5 w-5 text-muted-foreground" />
+                        </button>
+                      )}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
 
-                    <div className="space-y-2">
-                      <Label>Altitude (m)</Label>
-                      <Input
-                        type="number"
-                        value={day.altitude}
-                        onChange={(e) =>
-                          handleItineraryChange(
-                            index,
-                            "altitude",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g., 2860"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Distance (km)</Label>
-                      <Input
-                        type="number"
-                        value={day.distance}
-                        onChange={(e) =>
-                          handleItineraryChange(
-                            index,
-                            "distance",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g., 8"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Duration</Label>
-                      <Input
-                        value={day.duration}
-                        onChange={(e) =>
-                          handleItineraryChange(
-                            index,
-                            "duration",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g., 3-4 hours"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Accommodation</Label>
-                      <div className="flex items-center gap-2">
-                        <Hotel className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          value={day.accommodation}
-                          onChange={(e) =>
-                            handleItineraryChange(
-                              index,
-                              "accommodation",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g., Teahouse"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Meals (comma separated)</Label>
-                      <div className="flex items-center gap-2">
-                        <Utensils className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          value={day.meals.join(", ")}
-                          onChange={(e) =>
-                            handleItineraryChange(
-                              index,
-                              "meals",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g., Breakfast, Lunch, Dinner"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 space-y-2">
-                      <Label>Highlights (comma separated)</Label>
-                      <Input
-                        value={day.highlights.join(", ")}
-                        onChange={(e) =>
-                          handleItineraryChange(
-                            index,
-                            "highlights",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g., Scenic flight to Lukla, Buddhist monasteries"
-                      />
-                    </div>
-
-                    <div className="col-span-2 space-y-2">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={day.description}
-                        onChange={(e) =>
-                          handleItineraryChange(
-                            index,
-                            "description",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Detailed description of the day's trek..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="col-span-2 space-y-2">
-                      <Label>Notes (Optional)</Label>
-                      <Textarea
-                        value={day.notes || ""}
-                        onChange={(e) =>
-                          handleItineraryChange(index, "notes", e.target.value)
-                        }
-                        placeholder="Additional notes..."
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button type="button" onClick={addItineraryDay} variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Day
-              </Button>
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <GripVertical className="h-4 w-4" />
+              Drag days to reorder • Click day header to expand/collapse
             </div>
           </div>
 
@@ -955,18 +1183,95 @@ export default function RouteForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="costBreakdown.insurancePerPerson">
-                  Insurance Per Person
+                <Label htmlFor="costBreakdown.guideTransportation">
+                  Guide Transportation
                 </Label>
                 <Input
-                  id="costBreakdown.insurancePerPerson"
-                  name="costBreakdown.insurancePerPerson"
+                  id="costBreakdown.guideTransportation"
+                  name="costBreakdown.guideTransportation"
                   type="number"
-                  value={formData.costBreakdown.insurancePerPerson}
+                  value={formData.costBreakdown.guideTransportation}
                   onChange={handleInputChange}
                   placeholder="e.g., 100"
                 />
               </div>
+            </div>
+
+            {/* Other Costs */}
+            <div className="space-y-4">
+              <Label>Other Costs</Label>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Input
+                    value={newOtherCost.description}
+                    onChange={(e) =>
+                      setNewOtherCost((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Description (e.g., Porter fee, Equipment rental)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={newOtherCost.amount}
+                      onChange={(e) =>
+                        setNewOtherCost((prev) => ({
+                          ...prev,
+                          amount: parseFloat(e.target.value),
+                        }))
+                      }
+                      placeholder="Amount"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddOtherCost}
+                      disabled={!newOtherCost.description.trim()}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {formData.costBreakdown.otherCosts &&
+                formData.costBreakdown.otherCosts.length > 0 && (
+                  <div className="space-y-2">
+                    {formData.costBreakdown.otherCosts.map((cost, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <span>{cost.description}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">${cost.amount}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                costBreakdown: {
+                                  ...prev.costBreakdown,
+                                  otherCosts:
+                                    prev.costBreakdown.otherCosts?.filter(
+                                      (_, i) => i !== index
+                                    ) || [],
+                                },
+                              }));
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           </div>
 
@@ -1363,126 +1668,6 @@ export default function RouteForm({
                   />
                 </label>
               </div>
-            </div>
-          </div>
-
-          {/* Route Variations */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Route Variations</h3>
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Variation Name</Label>
-                  <Input
-                    value={newVariation.name}
-                    onChange={(e) =>
-                      setNewVariation((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., Short Version"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Duration (days)</Label>
-                  <Input
-                    type="number"
-                    value={newVariation.duration}
-                    onChange={(e) =>
-                      setNewVariation((prev) => ({
-                        ...prev,
-                        duration: parseFloat(e.target.value),
-                      }))
-                    }
-                    placeholder="e.g., 10"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Difficulty</Label>
-                  <Select
-                    value={newVariation.difficulty}
-                    onValueChange={(value) =>
-                      setNewVariation((prev) => ({
-                        ...prev,
-                        difficulty: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {difficultyLevels.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input
-                    value={newVariation.description}
-                    onChange={(e) =>
-                      setNewVariation((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    placeholder="Brief description of variation"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                onClick={handleAddVariation}
-                variant="outline"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Variation
-              </Button>
-
-              {formData.variations.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Added Variations</Label>
-                  <div className="space-y-2">
-                    {formData.variations.map((variation, index) => (
-                      <div key={index} className="rounded-lg border p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium">{variation.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {variation.duration} days • {variation.difficulty}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                variations: prev.variations.filter(
-                                  (_, i) => i !== index
-                                ),
-                              }));
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="mt-2 text-sm">{variation.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 

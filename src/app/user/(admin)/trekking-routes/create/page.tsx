@@ -394,6 +394,7 @@ export default function RouteForm({
     description: "",
     amount: 0,
   });
+
   const [newService, setNewService] = useState({
     name: "",
     description: "",
@@ -401,14 +402,11 @@ export default function RouteForm({
     isAvailable: true,
     isOptional: true,
   });
+
   const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [coverImagePreview, setCoverImagePreview] = useState(
-    route?.gallery?.coverImage || ""
-  );
+  const [coverImagePreview, setCoverImagePreview] = useState("");
   const [galleryImages, setGalleryImages] = useState<File[]>([]);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
-    route?.gallery?.images || []
-  );
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [loading, setLoading] = useState(false);
 
@@ -783,8 +781,6 @@ export default function RouteForm({
         },
         gallery: {
           ...formData.gallery,
-          coverImage: coverImagePreview,
-          images: galleryPreviews,
         },
         extraServices: formData.extraServices,
         isActive: formData.isActive,
@@ -809,7 +805,7 @@ export default function RouteForm({
         : "http://localhost:4000/api/treks/templates";
 
       const response = await fetch(url, {
-        method: route ? "PUT" : "POST",
+        method: route ? "PATCH" : "POST",
         body: formDataToSend,
         credentials: "include",
       });
@@ -829,6 +825,16 @@ export default function RouteForm({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExistingImageRemove = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      gallery: {
+        ...prev.gallery,
+        images: prev.gallery.images.filter((_, i: number) => i !== index),
+      },
+    }));
   };
 
   return (
@@ -1005,10 +1011,45 @@ export default function RouteForm({
             <h3 className="text-lg font-semibold">Cover Image</h3>
             <div className="space-y-2">
               <div className="relative h-64 rounded-lg border-2 border-dashed border-muted">
+                {formData.gallery.coverImage && !coverImagePreview ? (
+                  <>
+                    <Image
+                      src={
+                        formData.gallery.coverImage.startsWith("uploads/")
+                          ? process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                            formData.gallery.coverImage
+                          : formData.gallery.coverImage
+                      }
+                      alt="Cover preview"
+                      fill
+                      className="rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          gallery: {
+                            ...prev.gallery,
+                            coverImage: "",
+                          },
+                        }));
+                      }}
+                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : null}
                 {coverImagePreview ? (
                   <>
                     <Image
-                      src={coverImagePreview}
+                      src={
+                        coverImagePreview.startsWith("uploads/")
+                          ? process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                            coverImagePreview
+                          : coverImagePreview
+                      }
                       alt="Cover preview"
                       fill
                       className="rounded-lg object-cover"
@@ -1630,10 +1671,48 @@ export default function RouteForm({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Gallery Images</h3>
             <div className="grid grid-cols-4 gap-4">
+              {formData.gallery.images.map((image, index) => (
+                <div key={index} className="relative h-32 rounded-lg border">
+                  <Image
+                    src={
+                      image.startsWith("uploads/")
+                        ? process.env.NEXT_PUBLIC_ClOUDFLARE_API + image
+                        : image
+                    }
+                    alt={`Gallery ${index + 1}`}
+                    fill
+                    className="rounded-lg object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        gallery: {
+                          ...prev.gallery,
+                          images: prev.gallery.images.filter(
+                            (_, i) => i !== index
+                          ),
+                        },
+                      }));
+                      setGalleryPreviews((prev) =>
+                        prev.filter((_, i) => i !== index)
+                      );
+                    }}
+                    className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
               {galleryPreviews.map((preview, index) => (
                 <div key={index} className="relative h-32 rounded-lg border">
                   <Image
-                    src={preview}
+                    src={
+                      preview.startsWith("uploads/")
+                        ? process.env.NEXT_PUBLIC_ClOUDFLARE_API + preview
+                        : preview
+                    }
                     alt={`Gallery ${index + 1}`}
                     fill
                     className="rounded-lg object-cover"

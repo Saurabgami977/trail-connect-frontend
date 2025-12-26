@@ -411,7 +411,7 @@ export default function RoutesTable({
                       {route.gallery?.coverImage ? (
                         <Image
                           src={`${
-                            // process.env.NEXT_PUBLIC_ClOUDFLARE_API +
+                            process.env.NEXT_PUBLIC_ClOUDFLARE_API +
                             route.gallery.coverImage
                           }`}
                           alt={route.name}
