@@ -7,10 +7,13 @@ export const createTrekTemplate = async (data: any) => {
   return response.data;
 };
 
-export const getTrekTemplates = async () => {
-  const response = await AxiosService.get("/treks/templates", {
-    withCredentials: true,
-  });
+export const getTrekTemplates = async ({ regionId }: { regionId?: string }) => {
+  const response = await AxiosService.get(
+    `/treks/templates?regionId=${regionId || ""}`,
+    {
+      withCredentials: true,
+    }
+  );
   return response.data;
 };
 
@@ -39,5 +42,15 @@ export const getTemplateBySlug = async (slug: string) => {
   const response = await AxiosService.get(`/treks/templates/slug/${slug}`, {
     withCredentials: true,
   });
+  return response.data;
+};
+
+export const getTrekkingTemplatesByRegion = async (regionId: string) => {
+  const response = await AxiosService.get(
+    `/treks/templates/region/${regionId}`,
+    {
+      withCredentials: true,
+    }
+  );
   return response.data;
 };

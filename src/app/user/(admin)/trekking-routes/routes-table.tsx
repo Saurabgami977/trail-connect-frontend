@@ -523,10 +523,7 @@ export default function RoutesTable({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onClick={() =>
-                            window.open(
-                              `/trekking/routes/${route.slug}`,
-                              "_blank"
-                            )
+                            window.open(`/routes/${route.slug}`, "_blank")
                           }
                         >
                           <Eye className="mr-2 h-4 w-4" />

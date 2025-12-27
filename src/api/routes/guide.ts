@@ -7,10 +7,17 @@ export const getAll = async () => {
   return response.data;
 };
 
-export const getVerifiedGuides = async () => {
-  const response = await AxiosService.get("/guides/verified", {
-    withCredentials: true,
-  });
+export const getVerifiedGuides = async ({
+  regionId,
+}: {
+  regionId?: string;
+}) => {
+  const response = await AxiosService.get(
+    `/guides/verified?regionId=${regionId}`,
+    {
+      withCredentials: true,
+    }
+  );
   return response.data;
 };
 

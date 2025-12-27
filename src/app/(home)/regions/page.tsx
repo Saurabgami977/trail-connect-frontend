@@ -1,7 +1,7 @@
 // app/regions/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -43,74 +43,113 @@ import {
   Sparkles,
   BarChart3,
 } from "lucide-react";
-import { TREKKING_REGIONS, MOCK_GUIDES } from "@/lib/constants";
 import type {
-  Region,
-  RegionDetails,
   DifficultyFilter,
   SeasonFilter,
   AltitudeFilter,
   SortOption,
 } from "@/types/trekking-regions";
 import heroImage from "@/assets/hero-mountains.jpg";
+import { useQuery } from "@tanstack/react-query";
+import { getTrekkingRegions } from "@/api/routes/trekking-regions";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Extended region details with type safety
-const regionDetails: Record<string, RegionDetails> = {
-  everest: {
-    description:
-      "Trek to the base of the world's highest peak through legendary Sherpa villages and ancient monasteries.",
-    seasonality: ["Mar-May", "Sep-Nov"],
-    altitudeRange: "2,800m - 5,545m",
-    trekkingStyle: "Teahouse",
-    crowdLevel: "High",
-    culturalHighlights: ["Sherpa culture", "Buddhist monasteries"],
-    physicalDemand: 9,
-    scenicBeauty: 10,
-    culturalExperience: 8,
-  },
-  annapurna: {
-    description:
-      "Experience Nepal's most diverse trek through lush valleys, terraced farmland, and high mountain passes.",
-    seasonality: ["Mar-May", "Oct-Nov"],
-    altitudeRange: "820m - 5,416m",
-    trekkingStyle: "Teahouse",
-    crowdLevel: "Medium-High",
-    culturalHighlights: ["Gurung villages", "Thakali culture"],
-    physicalDemand: 8,
-    scenicBeauty: 9,
-    culturalExperience: 9,
-  },
-  langtang: {
-    description:
-      "Explore the sacred Langtang Valley, known as the 'Valley of Glaciers', just north of Kathmandu.",
-    seasonality: ["Mar-May", "Oct-Nov"],
-    altitudeRange: "1,500m - 4,984m",
-    trekkingStyle: "Teahouse",
-    crowdLevel: "Low-Medium",
-    culturalHighlights: ["Tamang heritage", "Buddhist sites"],
-    physicalDemand: 6,
-    scenicBeauty: 8,
-    culturalExperience: 8,
-  },
+// Define API region type based on the response
+interface ApiRegion {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  shortDescription: string;
+  image: string;
+  location: string;
+  difficulty: "easy" | "moderate" | "challenging" | "hard";
+  minAltitude: number;
+  maxAltitude: number;
+  avgDuration: number;
+  bestSeasons: string[];
+  popularity: number;
+  statistics: {
+    avgCostPerPerson: number;
+    avgGroupSize: number;
+    successRate: number;
+    totalTreks: number;
+  };
+  featured: boolean;
+  isActive: boolean;
+}
+
+// Convert API region to our UI region type
+interface Region {
+  _id: string;
+  name: string;
+  description: string;
+  difficulty: "Easy" | "Moderate" | "Challenging" | "Hard";
+  duration: string;
+  location: string;
+  guides: number;
+  rating: number;
+  startingPrice: number;
+}
+
+interface RegionDetails {
+  description: string;
+  seasonality: string[];
+  altitudeRange: string;
+  physicalDemand: number;
+  scenicBeauty: number;
+  culturalExperience: number;
+}
+
+// Helper function to map API difficulty to UI difficulty
+const mapDifficulty = (
+  apiDifficulty: string
+): "Easy" | "Moderate" | "Challenging" | "Hard" => {
+  switch (apiDifficulty) {
+    case "easy":
+      return "Easy";
+    case "moderate":
+      return "Moderate";
+    case "challenging":
+    case "hard":
+      return "Challenging";
+    default:
+      return "Moderate";
+  }
 };
 
-// Type guard for region IDs
-const isValidRegionId = (id: string): id is keyof typeof regionDetails => {
-  return id in regionDetails;
+// Helper function to format duration
+const formatDuration = (days: number): string => {
+  if (days <= 7) return `${days} days`;
+  const weeks = Math.floor(days / 7);
+  const remainingDays = days % 7;
+  if (remainingDays === 0) return `${weeks} week${weeks > 1 ? "s" : ""}`;
+  return `${weeks} week${weeks > 1 ? "s" : ""} ${remainingDays} day${
+    remainingDays > 1 ? "s" : ""
+  }`;
+};
+
+// Helper function to format altitude range
+const formatAltitudeRange = (min: number, max: number): string => {
+  return `${min.toLocaleString()}m - ${max.toLocaleString()}m`;
+};
+
+// Helper function to map season API values to UI values
+const mapSeasonToUI = (season: string): string => {
+  const seasonMap: Record<string, string> = {
+    spring: "Mar-May",
+    summer: "Jun-Aug",
+    autumn: "Sep-Nov",
+    winter: "Dec-Feb",
+  };
+  return seasonMap[season] || season;
 };
 
 // Type guard for difficulty string
 const isValidDifficulty = (
   difficulty: string
 ): difficulty is Region["difficulty"] => {
-  return [
-    "Easy",
-    "Moderate",
-    "Challenging",
-    "Hard",
-    "Moderate to Challenging",
-    "Very Challenging",
-  ].includes(difficulty);
+  return ["Easy", "Moderate", "Challenging", "Hard"].includes(difficulty);
 };
 
 export default function AllRegionsPage() {
@@ -122,10 +161,86 @@ export default function AllRegionsPage() {
   const [altitudeFilter, setAltitudeFilter] = useState<AltitudeFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("popularity");
 
-  // Get guide count per region with proper typing
-  const getGuideCount = (regionName: string): number => {
-    return MOCK_GUIDES.filter((guide) => guide.regions.includes(regionName))
-      .length;
+  // Fetch regions from API
+  const {
+    data: apiRegions,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["all-regions"],
+    queryFn: getTrekkingRegions,
+  });
+
+  // Transform API data to UI format
+  const allRegions = useMemo((): Region[] => {
+    if (!apiRegions) return [];
+
+    return apiRegions.map(
+      (region: ApiRegion) =>
+        ({
+          _id: region._id,
+          name: region.name,
+          description: region.shortDescription || region.description,
+          difficulty: mapDifficulty(region.difficulty),
+          duration: formatDuration(region.avgDuration),
+          location: region.location,
+          guides: region.statistics?.avgGroupSize || 8, // Using avgGroupSize as guide count proxy
+          rating: Math.round((region.popularity || 80) / 10), // Convert popularity (0-100) to rating (1-10)
+          startingPrice: region.statistics?.avgCostPerPerson || 0,
+          // Store original API data for filtering
+          _apiData: region,
+        } as Region & { _apiData?: ApiRegion })
+    );
+  }, [apiRegions]);
+
+  // Create region details from API data
+  const regionDetails = useMemo((): Record<string, RegionDetails> => {
+    if (!apiRegions) return {};
+
+    const details: Record<string, RegionDetails> = {};
+
+    apiRegions.forEach((region: ApiRegion) => {
+      // Calculate physical demand based on difficulty and altitude
+      let physicalDemand = 5;
+      if (region.difficulty === "easy") physicalDemand = 3;
+      if (region.difficulty === "moderate") physicalDemand = 6;
+      if (region.difficulty === "challenging") physicalDemand = 8;
+      if (region.difficulty === "hard") physicalDemand = 9;
+
+      // Adjust based on altitude
+      if (region.maxAltitude > 5000)
+        physicalDemand = Math.min(10, physicalDemand + 2);
+      if (region.maxAltitude > 4500)
+        physicalDemand = Math.min(10, physicalDemand + 1);
+
+      // Calculate scenic beauty based on popularity
+      const scenicBeauty = Math.min(
+        10,
+        Math.round((region.popularity || 80) / 10)
+      );
+
+      // Calculate cultural experience (placeholder)
+      const culturalExperience = 8; // Most regions have good cultural experience
+
+      details[region.slug] = {
+        description: region.description,
+        seasonality: region.bestSeasons.map(mapSeasonToUI),
+        altitudeRange: formatAltitudeRange(
+          region.minAltitude,
+          region.maxAltitude
+        ),
+        physicalDemand,
+        scenicBeauty,
+        culturalExperience,
+      };
+    });
+
+    return details;
+  }, [apiRegions]);
+
+  // Helper to get region details safely
+  const getRegionDetails = (regionId: string): RegionDetails | undefined => {
+    return regionDetails[regionId];
   };
 
   // Helper to check if region matches season filter
@@ -138,94 +253,96 @@ export default function AllRegionsPage() {
     const details = regionDetails[regionId];
     if (!details) return true;
 
-    // Map season strings to seasons
-    const seasonMap: Record<string, SeasonFilter[]> = {
+    // Map season UI strings to filter values
+    const seasonToFilterMap: Record<string, SeasonFilter[]> = {
       "Mar-May": ["spring"],
       "Apr-May": ["spring"],
       "Jun-Aug": ["summer"],
       "Sep-Nov": ["autumn"],
       "Oct-Nov": ["autumn"],
       "Dec-Feb": ["winter"],
-      "May-Oct": ["spring", "summer", "autumn"],
     };
 
     // Check if any of the region's seasons match the filter
     return details.seasonality.some((season) => {
-      const seasons = seasonMap[season] || [];
-      return seasons.includes(filter);
+      const filters = seasonToFilterMap[season] || [];
+      return filters.includes(filter);
     });
   };
 
   // Helper to check if region matches altitude filter
   const matchesAltitudeFilter = (
-    regionId: string,
+    region: Region & { _apiData?: ApiRegion },
     filter: AltitudeFilter
   ): boolean => {
     if (filter === "all") return true;
 
-    const altitudeMap: Record<string, AltitudeFilter[]> = {
-      everest: ["high"],
-      annapurna: ["high"],
-      langtang: ["medium", "high"],
-      manaslu: ["high"],
-      kanchenjunga: ["high"],
-      upperMustang: ["high"],
-      dhaulagiri: ["high"],
-      makalu: ["high"],
-    };
+    const maxAltitude = region._apiData?.maxAltitude || 0;
 
-    const regionAltitudes = altitudeMap[regionId] || ["medium"];
-    return regionAltitudes.includes(filter);
+    switch (filter) {
+      case "low":
+        return maxAltitude < 3000;
+      case "medium":
+        return maxAltitude >= 3000 && maxAltitude <= 4500;
+      case "high":
+        return maxAltitude > 4500;
+      default:
+        return true;
+    }
   };
 
   // Filter regions with proper typing
   const filteredRegions = useMemo(() => {
-    return TREKKING_REGIONS.filter((region): region is Region => {
-      // Type guard for region
-      if (!isValidDifficulty(region.difficulty)) {
-        console.warn(
-          `Invalid difficulty for region ${region.name}: ${region.difficulty}`
-        );
-        return false;
-      }
+    return allRegions.filter(
+      (region): region is Region & { _apiData?: ApiRegion } => {
+        // Type guard for region difficulty
+        if (!isValidDifficulty(region.difficulty)) {
+          console.warn(
+            `Invalid difficulty for region ${region.name}: ${region.difficulty}`
+          );
+          return false;
+        }
 
-      // Search filter
-      if (
-        searchQuery &&
-        !region.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !region.description.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
+        // Search filter
+        if (
+          searchQuery &&
+          !region.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !region.description.toLowerCase().includes(searchQuery.toLowerCase())
+        ) {
+          return false;
+        }
 
-      // Difficulty filter
-      if (difficultyFilter !== "all") {
-        const difficultyMap: Record<DifficultyFilter, Region["difficulty"][]> =
-          {
+        // Difficulty filter
+        if (difficultyFilter !== "all") {
+          const difficultyMap: Record<
+            DifficultyFilter,
+            Region["difficulty"][]
+          > = {
             all: ["Easy", "Moderate", "Challenging", "Hard"],
             easy: ["Easy"],
             moderate: ["Moderate"],
             challenging: ["Challenging", "Hard"],
           };
 
-        if (!difficultyMap[difficultyFilter].includes(region.difficulty)) {
+          if (!difficultyMap[difficultyFilter].includes(region.difficulty)) {
+            return false;
+          }
+        }
+
+        // Season filter
+        if (!matchesSeasonFilter(region._id, seasonFilter)) {
           return false;
         }
-      }
 
-      // Season filter
-      if (!matchesSeasonFilter(region.id, seasonFilter)) {
-        return false;
-      }
+        // Altitude filter
+        if (!matchesAltitudeFilter(region, altitudeFilter)) {
+          return false;
+        }
 
-      // Altitude filter
-      if (!matchesAltitudeFilter(region.id, altitudeFilter)) {
-        return false;
+        return true;
       }
-
-      return true;
-    });
-  }, [searchQuery, difficultyFilter, seasonFilter, altitudeFilter]);
+    );
+  }, [allRegions, searchQuery, difficultyFilter, seasonFilter, altitudeFilter]);
 
   // Sort regions with proper typing
   const sortedRegions = useMemo(() => {
@@ -247,12 +364,10 @@ export default function AllRegionsPage() {
         );
       }
       case "guides":
-        return regions.sort(
-          (a, b) => getGuideCount(b.name) - getGuideCount(a.name)
-        );
+        return regions.sort((a, b) => b.guides - a.guides);
       case "popularity":
       default:
-        return regions.sort((a, b) => b.guides - a.guides);
+        return regions.sort((a, b) => b.rating - a.rating); // Using rating as popularity proxy
     }
   }, [filteredRegions, sortBy]);
 
@@ -310,6 +425,38 @@ export default function AllRegionsPage() {
     difficultyFilter !== "all" ||
     seasonFilter !== "all" ||
     altitudeFilter !== "all";
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-[400px] w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-2xl font-bold mb-4">Error Loading Regions</h1>
+          <p className="text-muted-foreground mb-6">
+            Failed to load trekking regions. Please try again later.
+          </p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -447,8 +594,7 @@ export default function AllRegionsPage() {
             </div>
 
             <div className="mt-4 text-sm text-foreground">
-              Showing {sortedRegions.length} of {TREKKING_REGIONS.length}{" "}
-              regions
+              Showing {sortedRegions.length} of {allRegions.length} regions
             </div>
           </div>
         </div>
@@ -458,17 +604,14 @@ export default function AllRegionsPage() {
         {/* Regions Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
           {sortedRegions.map((region) => {
-            const details = isValidRegionId(region.id)
-              ? regionDetails[region.id]
-              : undefined;
-            const guideCount = getGuideCount(region.name);
+            const details = getRegionDetails(region._id);
 
             return (
               <Card
-                key={region.id}
+                key={region._id}
                 className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <Link href={`/regions/${region.id}`}>
+                <Link href={`/regions/${region._id}`}>
                   <CardContent className="p-0">
                     {/* Region Header */}
                     <div
@@ -499,7 +642,7 @@ export default function AllRegionsPage() {
                       <div className="absolute top-4 right-4">
                         <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1 text-white text-sm">
                           <Users className="h-3 w-3" />
-                          <span>{guideCount}+ guides</span>
+                          <span>{region.guides}+ guides</span>
                         </div>
                       </div>
 
@@ -519,7 +662,9 @@ export default function AllRegionsPage() {
                         </h3>
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                          <span className="font-medium">{region.rating}</span>
+                          <span className="font-medium">
+                            {region.rating}/10
+                          </span>
                         </div>
                       </div>
 
@@ -562,7 +707,7 @@ export default function AllRegionsPage() {
                             {details.seasonality.map((season, i) => (
                               <div
                                 key={`${season}-${i}`}
-                                className="flex items-center gap-1 px-2 py-1 bg-emerald-50  rounded text-sm"
+                                className="flex items-center gap-1 px-2 py-1 bg-emerald-50 rounded text-sm"
                               >
                                 {getSeasonIcon(season)}
                                 <span>{season}</span>
@@ -662,15 +807,13 @@ export default function AllRegionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {TREKKING_REGIONS.slice(0, 10).map((region) => {
-                    const details = isValidRegionId(region.id)
-                      ? regionDetails[region.id]
-                      : undefined;
-                    const guideCount = getGuideCount(region.name);
+                  {allRegions.slice(0, 10).map((region) => {
+                    const details = getRegionDetails(region._id);
+                    const maxAltitude = region._apiData?.maxAltitude || 0;
 
                     return (
                       <tr
-                        key={region.id}
+                        key={region._id}
                         className="border-t hover:bg-muted/50"
                       >
                         <td className="p-4">
@@ -705,13 +848,11 @@ export default function AllRegionsPage() {
                             <span>{details?.seasonality?.[0] || "Varies"}</span>
                           </div>
                         </td>
-                        <td className="p-4">
-                          {details?.altitudeRange?.split(" - ")[1] || "N/A"}
-                        </td>
+                        <td className="p-4">{maxAltitude.toLocaleString()}m</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
-                            <span>{guideCount}</span>
+                            <span>{region.guides}</span>
                           </div>
                         </td>
                         <td className="p-4 font-bold text-primary">
@@ -719,7 +860,7 @@ export default function AllRegionsPage() {
                         </td>
                         <td className="p-4">
                           <Button size="sm" variant="ghost" asChild>
-                            <Link href={`/regions/${region.id}`}>
+                            <Link href={`/regions/${region._id}`}>
                               View
                               <ArrowRight className="h-4 w-4 ml-2" />
                             </Link>
